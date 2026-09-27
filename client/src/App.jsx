@@ -1,33 +1,42 @@
 import { useEffect, useState } from 'react'
-import { listSightings, createSighting, deleteSighting } from './api'
+import {
+  listSessions,
+  createSession,
+  updateSession,
+  deleteSession,
+  addSet,
+  deleteSet,
+  getBodyWeight,
+  setBodyWeight,
+} from './api'
+import { calculateCalories } from './api/metTable.js'
 import DemoNotice from './components/DemoNotice.jsx'
 
-// A deliberately small working app. Replace all of it with your own project.
-//
-// What is worth keeping is the SHAPE: four states rather than two, a loading
-// message that admits a free-tier server can be slow to wake, and errors that
-// say something rather than rendering an empty list.
-
-const EMPTY_FORM = { place: '', description: '', spookiness: 3 }
+const EMPTY_SESSION_FORM = {
+  date: new Date().toISOString().split('T')[0],
+  durationMinutes: 45,
+  notes: '',
+}
+const EMPTY_SET_FORM = { exercise: '', weight: '', reps: '' }
 
 export default function App() {
-  const [status, setStatus] = useState('loading')   // loading | ready | error
+  const [status, setStatus] = useState('loading')
   const [rows, setRows] = useState([])
   const [error, setError] = useState(null)
   const [slow, setSlow] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [bodyWeight, setBodyWeightState] = useState(70)
+  const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM)
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
+  const [setForm, setSetForm] = useState(EMPTY_SET_FORM)
 
   async function load() {
     setStatus('loading')
     setError(null)
-
-    // A free-tier API sleeps. If this is taking a while, say so rather than
-    // spinning silently, which looks broken. See page 6.
     const timer = setTimeout(() => setSlow(true), 3000)
-
     try {
-      setRows(await listSightings())
+      setRows(await listSessions())
+      setBodyWeightState(getBodyWeight())
       setStatus('ready')
     } catch (caught) {
       setError(caught)
@@ -42,19 +51,28 @@ export default function App() {
     load()
   }, [])
 
-  async function handleSubmit(event) {
-    event.preventDefault()
-    if (!form.place.trim()) return
+  const totalCalories = rows.reduce(
+    (sum, session) => sum + calculateCalories(session.sets, bodyWeight, session.durationMinutes),
+    0
+  )
 
+  function handleWeightChange(event) {
+    const kg = Number(event.target.value)
+    setBodyWeightState(kg)
+    setBodyWeight(kg)
+  }
+
+  async function handleCreateSession(event) {
+    event.preventDefault()
     setSaving(true)
     try {
-      const created = await createSighting({
-        place: form.place.trim(),
-        description: form.description.trim(),
-        spookiness: Number(form.spookiness),
+      const created = await createSession({
+        date: sessionForm.date,
+        durationMinutes: Number(sessionForm.durationMinutes),
+        notes: sessionForm.notes.trim(),
       })
       setRows([created, ...rows])
-      setForm(EMPTY_FORM)
+      setSessionForm(EMPTY_SESSION_FORM)
     } catch (caught) {
       setError(caught)
     } finally {
@@ -62,13 +80,59 @@ export default function App() {
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDeleteSession(id) {
     const previous = rows
-    setRows(rows.filter((row) => row.id !== id))   // optimistic
+    setRows(rows.filter((row) => row.id !== id))
     try {
-      await deleteSighting(id)
+      await deleteSession(id)
     } catch (caught) {
-      setRows(previous)                            // put it back on failure
+      setRows(previous)
+      setError(caught)
+    }
+  }
+
+  async function handleMarkComplete(id) {
+    try {
+      const updated = await updateSession(id, { complete: true })
+      setRows(rows.map((row) => (row.id === id ? updated : row)))
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  async function handleAddSet(event, sessionId) {
+    event.preventDefault()
+    if (!setForm.exercise.trim()) return
+    try {
+      const created = await addSet(sessionId, {
+        exercise: setForm.exercise.trim(),
+        weight: Number(setForm.weight),
+        reps: Number(setForm.reps),
+      })
+      setRows(
+        rows.map((row) =>
+          row.id === sessionId ? { ...row, sets: [...row.sets, created] } : row
+        )
+      )
+      setSetForm(EMPTY_SET_FORM)
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  async function handleDeleteSet(sessionId, setId) {
+    const previous = rows
+    setRows(
+      rows.map((row) =>
+        row.id === sessionId
+          ? { ...row, sets: row.sets.filter((set) => set.id !== setId) }
+          : row
+      )
+    )
+    try {
+      await deleteSet(sessionId, setId)
+    } catch (caught) {
+      setRows(previous)
       setError(caught)
     }
   }
@@ -76,14 +140,17 @@ export default function App() {
   return (
     <div className="page">
       <header>
-        <h1>HAUnted Sightings</h1>
-        <p className="lede">
-          Replace this with your own project. This one is here so the template
-          has something that works.
-        </p>
+        <h1>Hercurles</h1>
+        <p className="lede">Log your workouts, track sets, and see your calorie burn.</p>
       </header>
 
       <DemoNotice />
+
+      <div className="calorie-hero">
+        <div className="calorie-hero-label">Total Calorie Burn</div>
+        <div className="calorie-hero-value">{totalCalories}</div>
+        <div className="calorie-hero-unit">kcal estimated</div>
+      </div>
 
       {error && (
         <p className="error" role="alert">
@@ -91,46 +158,56 @@ export default function App() {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="card">
-        <h2>Report a sighting</h2>
-
-        <label htmlFor="place">Place</label>
+      <div className="card">
+        <label htmlFor="bodyweight">Body weight (for calorie calc)</label>
         <input
-          id="place"
-          value={form.place}
-          onChange={(event) => setForm({ ...form, place: event.target.value })}
-          maxLength={120}
+          id="bodyweight"
+          type="number"
+          value={bodyWeight}
+          onChange={handleWeightChange}
+          style={{ width: 80 }}
+        />{' '}
+        kg
+      </div>
+
+      <form onSubmit={handleCreateSession} className="card">
+        <h2>New session</h2>
+
+        <label htmlFor="date">Date</label>
+        <input
+          id="date"
+          type="date"
+          value={sessionForm.date}
+          onChange={(event) => setSessionForm({ ...sessionForm, date: event.target.value })}
           required
         />
 
-        <label htmlFor="description">What happened</label>
-        <textarea
-          id="description"
-          value={form.description}
-          onChange={(event) => setForm({ ...form, description: event.target.value })}
-          maxLength={2000}
-          rows={3}
-        />
-
-        <label htmlFor="spookiness">Spookiness, 1 to 5</label>
+        <label htmlFor="duration">Duration (minutes)</label>
         <input
-          id="spookiness"
+          id="duration"
           type="number"
           min="1"
-          max="5"
-          value={form.spookiness}
-          onChange={(event) => setForm({ ...form, spookiness: event.target.value })}
+          value={sessionForm.durationMinutes}
+          onChange={(event) =>
+            setSessionForm({ ...sessionForm, durationMinutes: event.target.value })
+          }
           required
+        />
+
+        <label htmlFor="notes">Notes (optional)</label>
+        <textarea
+          id="notes"
+          value={sessionForm.notes}
+          onChange={(event) => setSessionForm({ ...sessionForm, notes: event.target.value })}
+          rows={2}
+          placeholder="e.g. Push day, feeling strong"
         />
 
         <button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : 'Add sighting'}
+          {saving ? 'Saving...' : 'Start session'}
         </button>
       </form>
 
-      {/* Four states. Empty and error are different things and must not look
-          the same: an empty list means "nothing here yet", an error means
-          "we could not find out". */}
       {status === 'loading' && (
         <p className="muted">
           Loading{slow ? '. The server may be waking up, which can take up to a minute.' : '...'}
@@ -138,30 +215,76 @@ export default function App() {
       )}
 
       {status === 'ready' && rows.length === 0 && (
-        <p className="muted">No sightings reported yet. Add the first one above.</p>
+        <p className="muted">No sessions yet. Log your first workout above.</p>
       )}
 
       {status === 'ready' && rows.length > 0 && (
         <ul className="list">
-          {rows.map((row) => (
-            <li key={row.id} className="card">
-              <div className="row-head">
-                <h3>{row.place}</h3>
-                <span className="spooky" aria-label={`Spookiness ${row.spookiness} of 5`}>
-                  {'*'.repeat(row.spookiness)}
-                </span>
-              </div>
-              {row.description
-                ? <p>{row.description}</p>
-                : <p className="muted">No description given.</p>}
-              <footer>
-                <time dateTime={row.reported_at}>
-                  {new Date(row.reported_at).toLocaleString()}
-                </time>
-                <button onClick={() => handleDelete(row.id)}>Delete</button>
-              </footer>
-            </li>
-          ))}
+          {rows.map((session) => {
+            const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
+            const isExpanded = expandedId === session.id
+            return (
+              <li key={session.id} className="card">
+                <div className="row-head">
+                  <h3>
+                    {session.date} {session.complete ? <span className="badge">DONE</span> : null}
+                  </h3>
+                  <span className="kcal-tag">{kcal} kcal</span>
+                </div>
+                <p className="muted">
+                  {session.durationMinutes} min · {session.sets.length} sets
+                  {session.notes ? ` · ${session.notes}` : ''}
+                </p>
+
+                {session.sets.length > 0 && (
+                  <ul className="set-list">
+                    {session.sets.map((set, i) => (
+                      <li key={set.id}>
+                        {i + 1}. {set.exercise} — {set.weight}kg × {set.reps} reps{' '}
+                        <button onClick={() => handleDeleteSet(session.id, set.id)}>✕</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <footer>
+                  <button onClick={() => setExpandedId(isExpanded ? null : session.id)}>
+                    {isExpanded ? 'Close' : 'Add set'}
+                  </button>
+                  {!session.complete && (
+                    <button onClick={() => handleMarkComplete(session.id)}>Mark complete</button>
+                  )}
+                  <button onClick={() => handleDeleteSession(session.id)}>Delete</button>
+                </footer>
+
+                {isExpanded && (
+                  <form onSubmit={(event) => handleAddSet(event, session.id)} className="inline-form">
+                    <input
+                      placeholder="Exercise"
+                      value={setForm.exercise}
+                      onChange={(event) => setSetForm({ ...setForm, exercise: event.target.value })}
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Weight (kg)"
+                      value={setForm.weight}
+                      onChange={(event) => setSetForm({ ...setForm, weight: event.target.value })}
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Reps"
+                      value={setForm.reps}
+                      onChange={(event) => setSetForm({ ...setForm, reps: event.target.value })}
+                      required
+                    />
+                    <button type="submit">+ Log set</button>
+                  </form>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

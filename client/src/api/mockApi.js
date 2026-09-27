@@ -1,65 +1,57 @@
-// The simulated backend.
-//
-// Same function names, same return types, and the same shape of failure as
-// httpApi.js, so your components cannot tell the difference. Data lives in the
-// visitor's own browser and goes no further.
-//
-// This exists so the template's GitHub Pages link works on day one and so you
-// can build the interface before your API is deployed. It is NOT a finished
-// project. See content/extending-your-app page 3.
-
 import seed from './seed.json'
 
-const KEY = 'final-project:sightings'
+const SESSIONS_KEY = 'final-project:sessions'
+const WEIGHT_KEY = 'final-project:bodyweight'
 
-// A real network is not instant. Keeping this delay is what forces you to build
-// a loading state now, while it is cheap, instead of discovering you need one
-// the day you switch to the real API.
 const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function read() {
-  const stored = localStorage.getItem(KEY)
+  const stored = localStorage.getItem(SESSIONS_KEY)
   if (stored) {
     try {
       return JSON.parse(stored)
     } catch {
-      // Corrupted storage. Start again rather than crashing the app.
-      localStorage.removeItem(KEY)
+      localStorage.removeItem(SESSIONS_KEY)
     }
   }
-  localStorage.setItem(KEY, JSON.stringify(seed))
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(seed))
   return seed
 }
 
 function write(rows) {
-  localStorage.setItem(KEY, JSON.stringify(rows))
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(rows))
   return rows
 }
 
-export async function listSightings() {
-  await delay()
-  return read().slice().sort((a, b) => b.reported_at.localeCompare(a.reported_at))
+export function getBodyWeight() {
+  const stored = localStorage.getItem(WEIGHT_KEY)
+  return stored ? Number(stored) : 70
 }
 
-export async function getSighting(id) {
+export function setBodyWeight(kg) {
+  localStorage.setItem(WEIGHT_KEY, String(kg))
+}
+
+export async function listSessions() {
+  await delay()
+  return read().slice().sort((a, b) => b.date.localeCompare(a.date))
+}
+
+export async function getSession(id) {
   await delay()
   const found = read().find((row) => String(row.id) === String(id))
   if (!found) throw new Error('Not found')
   return found
 }
 
-export async function createSighting(input) {
+export async function createSession(input) {
   await delay()
-  const created = {
-    ...input,
-    id: crypto.randomUUID(),
-    reported_at: new Date().toISOString(),
-  }
+  const created = { ...input, id: crypto.randomUUID(), complete: false, sets: [] }
   write([...read(), created])
   return created
 }
 
-export async function updateSighting(id, input) {
+export async function updateSession(id, input) {
   await delay()
   const rows = read()
   const index = rows.findIndex((row) => String(row.id) === String(id))
@@ -69,7 +61,27 @@ export async function updateSighting(id, input) {
   return rows[index]
 }
 
-export async function deleteSighting(id) {
+export async function deleteSession(id) {
   await delay()
   write(read().filter((row) => String(row.id) !== String(id)))
+}
+
+export async function addSet(sessionId, input) {
+  await delay()
+  const rows = read()
+  const session = rows.find((row) => String(row.id) === String(sessionId))
+  if (!session) throw new Error('Not found')
+  const set = { ...input, id: crypto.randomUUID() }
+  session.sets = [...session.sets, set]
+  write(rows)
+  return set
+}
+
+export async function deleteSet(sessionId, setId) {
+  await delay()
+  const rows = read()
+  const session = rows.find((row) => String(row.id) === String(sessionId))
+  if (!session) throw new Error('Not found')
+  session.sets = session.sets.filter((set) => String(set.id) !== String(setId))
+  write(rows)
 }
