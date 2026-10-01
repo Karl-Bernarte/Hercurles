@@ -12,7 +12,7 @@ async function request(path, options) {
       const body = await response.json()
       if (body?.error) message = body.error
     } catch {
-      // body wasn't JSON
+      // The body was not JSON. The status line is all we have.
     }
     throw new Error(message)
   }
@@ -33,12 +33,18 @@ export const addSet = (sessionId, input) =>
 export const deleteSet = (sessionId, setId) =>
   request(`/api/sessions/${sessionId}/sets/${setId}`, { method: 'DELETE' })
 
-// Body weight stays purely client-side for now — no server concept for it yet.
-const WEIGHT_KEY = 'final-project:bodyweight'
-export function getBodyWeight() {
-  const stored = localStorage.getItem(WEIGHT_KEY)
-  return stored ? Number(stored) : 70
-}
-export function setBodyWeight(kg) {
-  localStorage.setItem(WEIGHT_KEY, String(kg))
-}
+export const listWeights = () => request('/api/weights')
+export const addWeight = (input) =>
+  request('/api/weights', { method: 'POST', body: JSON.stringify(input) })
+export const deleteWeight = (id) =>
+  request(`/api/weights/${id}`, { method: 'DELETE' })
+
+export const listWorkouts = () => request('/api/workouts')
+export const createWorkout = (input) =>
+  request('/api/workouts', { method: 'POST', body: JSON.stringify(input) })
+export const deleteWorkout = (id) =>
+  request(`/api/workouts/${id}`, { method: 'DELETE' })
+export const addExercise = (workoutId, input) =>
+  request(`/api/workouts/${workoutId}/exercises`, { method: 'POST', body: JSON.stringify(input) })
+export const deleteExercise = (workoutId, exerciseId) =>
+  request(`/api/workouts/${workoutId}/exercises/${exerciseId}`, { method: 'DELETE' })

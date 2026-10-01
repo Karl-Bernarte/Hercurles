@@ -16,14 +16,14 @@ body {
 .page {
   max-width: 480px;
   margin: 0 auto;
-  padding: 20px 16px 60px;
+  padding: 20px 16px 100px; /* bottom room so the fixed nav never covers content */
 }
 
 header h1 {
   color: #b2e35e;
   font-weight: 800;
   font-size: 24px;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .lede {
@@ -65,6 +65,7 @@ header h1 {
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 14px;
+  font-family: inherit;
 }
 
 .card button[type="submit"] {
@@ -81,6 +82,12 @@ button {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+  font-family: inherit;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .muted {
@@ -99,6 +106,7 @@ button {
 .list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .row-head {
@@ -125,28 +133,32 @@ footer button {
   color: #f4f4f5;
 }
 
-/* --- Hercurles-specific additions --- */
+/* --- Calorie hero, badges, sets --- */
 
 .calorie-hero {
   text-align: center;
-  margin: 8px 0 24px;
+  margin: 8px 0 20px;
 }
+
 .calorie-hero-label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.6;
 }
+
 .calorie-hero-value {
   font-size: 48px;
   font-weight: 800;
   line-height: 1.1;
   color: #b2e35e;
 }
+
 .calorie-hero-unit {
   font-size: 12px;
   opacity: 0.6;
 }
+
 .badge {
   font-size: 11px;
   padding: 2px 8px;
@@ -154,31 +166,172 @@ footer button {
   background: rgba(178, 227, 94, 0.15);
   border: 1px solid rgba(178, 227, 94, 0.4);
 }
+
 .kcal-tag {
   font-weight: 700;
   color: #b2e35e;
 }
+
 .set-list {
   list-style: none;
   padding: 0;
   margin: 8px 0;
 }
+
 .set-list li {
   padding: 4px 0;
   font-size: 14px;
 }
+
+.set-list button {
+  background: transparent;
+  color: #71717a;
+  padding: 0 6px;
+  font-size: 14px;
+}
+
 .inline-form {
   display: flex;
   gap: 8px;
   margin-top: 10px;
   flex-wrap: wrap;
 }
+
 .inline-form input {
   flex: 1;
   min-width: 100px;
-  background: #0a0a0a;
+}
+
+.inline-form button[type="submit"] {
+  width: auto;
+  margin-top: 0;
+}
+
+/* --- Buttons and small helpers --- */
+
+.btn-block {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.ghost {
+  background: transparent;
   border: 1px solid #2e2e2e;
   color: #f4f4f5;
-  border-radius: 8px;
-  padding: 8px 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-cancel {
+  margin-top: 8px;
+  padding: 10px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #71717a;
+  text-align: center;
+  margin: 8px 0 20px;
+}
+
+/* --- Bottom navigation --- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  background: #141414;
+  border-top: 1px solid #2e2e2e;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 10;
+}
+
+.nav-item {
+  flex: 1;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  background: transparent;
+  border-radius: 0;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nav-item.active {
+  color: #b2e35e;
+}
+
+/* --- Weight tab --- */
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.segmented button {
+  flex: 1;
+  background: transparent;
+  color: #71717a;
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.segmented button.active {
+  background: #b2e35e;
+  color: #0a0a0a;
+}
+
+.weight-current {
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+.weight-current-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: #b2e35e;
+  line-height: 1.1;
+}
+
+.weight-change {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.weight-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-empty {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.entry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #2e2e2e;
+  font-size: 14px;
+}
+
+.entry-row:last-child {
+  border-bottom: none;
 }

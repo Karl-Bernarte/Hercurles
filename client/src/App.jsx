@@ -6,37 +6,68 @@ import {
   deleteSession,
   addSet,
   deleteSet,
-  getBodyWeight,
-  setBodyWeight,
+  listWeights,
+  addWeight,
+  deleteWeight,
+  listWorkouts,
+  createWorkout,
+  deleteWorkout,
+  addExercise,
+  deleteExercise,
 } from './api'
-import { calculateCalories } from './api/metTable.js'
-import DemoNotice from './components/DemoNotice.jsx'
+import { todayLocal, formatDay } from './dateUtils.js'
+import BottomNav from './components/BottomNav.jsx'
+import WorkoutView from './views/WorkoutView.jsx'
+import LogWorkoutView from './views/LogWorkoutView.jsx'
+import SessionDetailView from './views/SessionDetailView.jsx'
+import WorkoutsView from './views/WorkoutsView.jsx'
+import WorkoutDetailView from './views/WorkoutDetailView.jsx'
+import WeightView from './views/WeightView.jsx'
 
-const EMPTY_SESSION_FORM = {
-  date: new Date().toISOString().split('T')[0],
-  durationMinutes: 45,
-  notes: '',
-}
-const EMPTY_SET_FORM = { exercise: '', weight: '', reps: '' }
+const DEFAULT_BODY_WEIGHT = 70
+
+const newestFirst = (a, b) => b.date.localeCompare(a.date)
+const oldestFirst = (a, b) => a.recordedAt.localeCompare(b.recordedAt)
 
 export default function App() {
-  const [status, setStatus] = useState('loading')
-  const [rows, setRows] = useState([])
+  // workout | log | sessionDetail | workouts | workoutDetail | weight
+  const [view, setView] = useState('workout')
+  const [status, setStatus] = useState('loading') // loading | ready | error
+  const [sessions, setSessions] = useState([])
+  const [weights, setWeights] = useState([])
+  const [workouts, setWorkouts] = useState([])
   const [error, setError] = useState(null)
   const [slow, setSlow] = useState(false)
-  const [bodyWeight, setBodyWeightState] = useState(70)
-  const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM)
-  const [saving, setSaving] = useState(false)
-  const [expandedId, setExpandedId] = useState(null)
-  const [setForm, setSetForm] = useState(EMPTY_SET_FORM)
+  const [openSessionId, setOpenSessionId] = useState(null)
+  const [openWorkoutId, setOpenWorkoutId] = useState(null)
+
+  // "Today" is re-checked every minute, so a tab left open past midnight moves
+  // to the new day by itself. pickedDate stays null while following today.
+  const [today, setToday] = useState(todayLocal())
+  const [pickedDate, setPickedDate] = useState(null)
+  const activeDate = pickedDate ?? today
+
+  useEffect(() => {
+    const timer = setInterval(() => setToday(todayLocal()), 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   async function load() {
     setStatus('loading')
     setError(null)
+
+    // A free-tier API sleeps. Say so instead of spinning silently.
     const timer = setTimeout(() => setSlow(true), 3000)
+
     try {
-      setRows(await listSessions())
-      setBodyWeightState(getBodyWeight())
+      const [sessionRows, weightRows, workoutRows] = await Promise.all([
+        listSessions(),
+        listWeights(),
+        listWorkouts(),
+      ])
+      setSessions(sessionRows)
+      setWeights(weightRows)
+      setWorkouts(workoutRows)
       setStatus('ready')
     } catch (caught) {
       setError(caught)
@@ -51,42 +82,41 @@ export default function App() {
     load()
   }, [])
 
-  const totalCalories = rows.reduce(
-    (sum, session) => sum + calculateCalories(session.sets, bodyWeight, session.durationMinutes),
-    0
-  )
+  // Calorie estimates use the most recent weigh-in.
+  const bodyWeight =
+    weights.length > 0 ? weights[weights.length - 1].weightKg : DEFAULT_BODY_WEIGHT
 
-  function handleWeightChange(event) {
-    const kg = Number(event.target.value)
-    setBodyWeightState(kg)
-    setBodyWeight(kg)
+  const openSession = sessions.find((session) => session.id === openSessionId)
+  const openWorkout = workouts.find((workout) => workout.id === openWorkoutId)
+
+  function handleDateChange(value) {
+    if (value > today) return
+    setPickedDate(value === today ? null : value)
   }
 
-  async function handleCreateSession(event) {
-    event.preventDefault()
-    setSaving(true)
+  // Sessions (logged workouts)
+
+  async function handleCreateSession(input) {
     try {
-      const created = await createSession({
-        date: sessionForm.date,
-        durationMinutes: Number(sessionForm.durationMinutes),
-        notes: sessionForm.notes.trim(),
-      })
-      setRows([created, ...rows])
-      setSessionForm(EMPTY_SESSION_FORM)
+      const created = await createSession(input)
+      setSessions((current) => [created, ...current].sort(newestFirst))
+      setPickedDate(created.date === today ? null : created.date)
+      setOpenSessionId(created.id) // open it so sets can go in right away
+      setView('sessionDetail')
     } catch (caught) {
       setError(caught)
-    } finally {
-      setSaving(false)
     }
   }
 
   async function handleDeleteSession(id) {
-    const previous = rows
-    setRows(rows.filter((row) => row.id !== id))
+    if (!window.confirm('Delete this log?')) return
+    const previous = sessions
+    setSessions((current) => current.filter((session) => session.id !== id))
+    setView('workout')
     try {
       await deleteSession(id)
     } catch (caught) {
-      setRows(previous)
+      setSessions(previous)
       setError(caught)
     }
   }
@@ -94,45 +124,126 @@ export default function App() {
   async function handleMarkComplete(id) {
     try {
       const updated = await updateSession(id, { complete: true })
-      setRows(rows.map((row) => (row.id === id ? updated : row)))
+      setSessions((current) => current.map((session) => (session.id === id ? updated : session)))
     } catch (caught) {
       setError(caught)
     }
   }
 
-  async function handleAddSet(event, sessionId) {
-    event.preventDefault()
-    if (!setForm.exercise.trim()) return
+  async function handleAddSet(sessionId, input) {
     try {
-      const created = await addSet(sessionId, {
-        exercise: setForm.exercise.trim(),
-        weight: Number(setForm.weight),
-        reps: Number(setForm.reps),
-      })
-      setRows(
-        rows.map((row) =>
-          row.id === sessionId ? { ...row, sets: [...row.sets, created] } : row
+      const created = await addSet(sessionId, input)
+      setSessions((current) =>
+        current.map((session) =>
+          session.id === sessionId ? { ...session, sets: [...session.sets, created] } : session
         )
       )
-      setSetForm(EMPTY_SET_FORM)
+      return true
     } catch (caught) {
       setError(caught)
+      return false
     }
   }
 
   async function handleDeleteSet(sessionId, setId) {
-    const previous = rows
-    setRows(
-      rows.map((row) =>
-        row.id === sessionId
-          ? { ...row, sets: row.sets.filter((set) => set.id !== setId) }
-          : row
+    const previous = sessions
+    setSessions((current) =>
+      current.map((session) =>
+        session.id === sessionId
+          ? { ...session, sets: session.sets.filter((set) => set.id !== setId) }
+          : session
       )
     )
     try {
       await deleteSet(sessionId, setId)
     } catch (caught) {
-      setRows(previous)
+      setSessions(previous)
+      setError(caught)
+    }
+  }
+
+  // Workouts (named exercise lists)
+
+  async function handleCreateWorkout(name) {
+    try {
+      const created = await createWorkout({ name })
+      setWorkouts((current) => [...current, created])
+      setOpenWorkoutId(created.id)
+      setView('workoutDetail') // straight into the new list so exercises can go in
+      return true
+    } catch (caught) {
+      setError(caught)
+      return false
+    }
+  }
+
+  async function handleDeleteWorkout(id) {
+    if (!window.confirm('Delete this workout? Logs you already made keep its name.')) return
+    const previous = workouts
+    setWorkouts((current) => current.filter((workout) => workout.id !== id))
+    setView('workouts')
+    try {
+      await deleteWorkout(id)
+    } catch (caught) {
+      setWorkouts(previous)
+      setError(caught)
+    }
+  }
+
+  async function handleAddExercise(workoutId, input) {
+    try {
+      const created = await addExercise(workoutId, input)
+      setWorkouts((current) =>
+        current.map((workout) =>
+          workout.id === workoutId
+            ? { ...workout, exercises: [...workout.exercises, created] }
+            : workout
+        )
+      )
+      return true
+    } catch (caught) {
+      setError(caught)
+      return false
+    }
+  }
+
+  async function handleDeleteExercise(workoutId, exerciseId) {
+    const previous = workouts
+    setWorkouts((current) =>
+      current.map((workout) =>
+        workout.id === workoutId
+          ? { ...workout, exercises: workout.exercises.filter((row) => row.id !== exerciseId) }
+          : workout
+      )
+    )
+    try {
+      await deleteExercise(workoutId, exerciseId)
+    } catch (caught) {
+      setWorkouts(previous)
+      setError(caught)
+    }
+  }
+
+  // Weight
+
+  async function handleAddWeight(input) {
+    try {
+      const created = await addWeight(input)
+      setWeights((current) => [...current, created].sort(oldestFirst))
+      return true
+    } catch (caught) {
+      setError(caught)
+      return false
+    }
+  }
+
+  async function handleDeleteWeight(id) {
+    const previous = weights
+    setWeights((current) => current.filter((entry) => entry.id !== id))
+    try {
+      await deleteWeight(id)
+    } catch (caught) {
+      setWeights(previous)
       setError(caught)
     }
   }
@@ -141,16 +252,8 @@ export default function App() {
     <div className="page">
       <header>
         <h1>Hercurles</h1>
-        <p className="lede">Log your workouts, track sets, and see your calorie burn.</p>
+        <p className="lede">{formatDay(today)}</p>
       </header>
-
-      <DemoNotice />
-
-      <div className="calorie-hero">
-        <div className="calorie-hero-label">Total Calorie Burn</div>
-        <div className="calorie-hero-value">{totalCalories}</div>
-        <div className="calorie-hero-unit">kcal estimated</div>
-      </div>
 
       {error && (
         <p className="error" role="alert">
@@ -158,135 +261,77 @@ export default function App() {
         </p>
       )}
 
-      <div className="card">
-        <label htmlFor="bodyweight">Body weight (for calorie calc)</label>
-        <input
-          id="bodyweight"
-          type="number"
-          value={bodyWeight}
-          onChange={handleWeightChange}
-          style={{ width: 80 }}
-        />{' '}
-        kg
-      </div>
-
-      <form onSubmit={handleCreateSession} className="card">
-        <h2>New session</h2>
-
-        <label htmlFor="date">Date</label>
-        <input
-          id="date"
-          type="date"
-          value={sessionForm.date}
-          onChange={(event) => setSessionForm({ ...sessionForm, date: event.target.value })}
-          required
-        />
-
-        <label htmlFor="duration">Duration (minutes)</label>
-        <input
-          id="duration"
-          type="number"
-          min="1"
-          value={sessionForm.durationMinutes}
-          onChange={(event) =>
-            setSessionForm({ ...sessionForm, durationMinutes: event.target.value })
-          }
-          required
-        />
-
-        <label htmlFor="notes">Notes (optional)</label>
-        <textarea
-          id="notes"
-          value={sessionForm.notes}
-          onChange={(event) => setSessionForm({ ...sessionForm, notes: event.target.value })}
-          rows={2}
-          placeholder="e.g. Push day, feeling strong"
-        />
-
-        <button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : 'Start session'}
-        </button>
-      </form>
-
       {status === 'loading' && (
         <p className="muted">
           Loading{slow ? '. The server may be waking up, which can take up to a minute.' : '...'}
         </p>
       )}
 
-      {status === 'ready' && rows.length === 0 && (
-        <p className="muted">No sessions yet. Log your first workout above.</p>
+      {status === 'ready' && view === 'workout' && (
+        <WorkoutView
+          sessions={sessions}
+          date={activeDate}
+          today={today}
+          bodyWeight={bodyWeight}
+          onDateChange={handleDateChange}
+          onOpenSession={(id) => {
+            setOpenSessionId(id)
+            setView('sessionDetail')
+          }}
+          onLogWorkout={() => setView('log')}
+          onOpenWorkouts={() => setView('workouts')}
+        />
       )}
 
-      {status === 'ready' && rows.length > 0 && (
-        <ul className="list">
-          {rows.map((session) => {
-            const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
-            const isExpanded = expandedId === session.id
-            return (
-              <li key={session.id} className="card">
-                <div className="row-head">
-                  <h3>
-                    {session.date} {session.complete ? <span className="badge">DONE</span> : null}
-                  </h3>
-                  <span className="kcal-tag">{kcal} kcal</span>
-                </div>
-                <p className="muted">
-                  {session.durationMinutes} min · {session.sets.length} sets
-                  {session.notes ? ` · ${session.notes}` : ''}
-                </p>
-
-                {session.sets.length > 0 && (
-                  <ul className="set-list">
-                    {session.sets.map((set, i) => (
-                      <li key={set.id}>
-                        {i + 1}. {set.exercise} — {set.weight}kg × {set.reps} reps{' '}
-                        <button onClick={() => handleDeleteSet(session.id, set.id)}>✕</button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <footer>
-                  <button onClick={() => setExpandedId(isExpanded ? null : session.id)}>
-                    {isExpanded ? 'Close' : 'Add set'}
-                  </button>
-                  {!session.complete && (
-                    <button onClick={() => handleMarkComplete(session.id)}>Mark complete</button>
-                  )}
-                  <button onClick={() => handleDeleteSession(session.id)}>Delete</button>
-                </footer>
-
-                {isExpanded && (
-                  <form onSubmit={(event) => handleAddSet(event, session.id)} className="inline-form">
-                    <input
-                      placeholder="Exercise"
-                      value={setForm.exercise}
-                      onChange={(event) => setSetForm({ ...setForm, exercise: event.target.value })}
-                      required
-                    />
-                    <input
-                      type="number"
-                      placeholder="Weight (kg)"
-                      value={setForm.weight}
-                      onChange={(event) => setSetForm({ ...setForm, weight: event.target.value })}
-                      required
-                    />
-                    <input
-                      type="number"
-                      placeholder="Reps"
-                      value={setForm.reps}
-                      onChange={(event) => setSetForm({ ...setForm, reps: event.target.value })}
-                      required
-                    />
-                    <button type="submit">+ Log set</button>
-                  </form>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+      {status === 'ready' && view === 'log' && (
+        <LogWorkoutView
+          workouts={workouts}
+          forDate={activeDate}
+          onSubmit={handleCreateSession}
+          onCancel={() => setView('workout')}
+        />
       )}
+
+      {status === 'ready' && view === 'sessionDetail' && openSession && (
+        <SessionDetailView
+          session={openSession}
+          workouts={workouts}
+          bodyWeight={bodyWeight}
+          onBack={() => setView('workout')}
+          onMarkComplete={handleMarkComplete}
+          onDelete={handleDeleteSession}
+          onAddSet={handleAddSet}
+          onDeleteSet={handleDeleteSet}
+        />
+      )}
+
+      {status === 'ready' && view === 'workouts' && (
+        <WorkoutsView
+          workouts={workouts}
+          onCreate={handleCreateWorkout}
+          onOpen={(id) => {
+            setOpenWorkoutId(id)
+            setView('workoutDetail')
+          }}
+          onBack={() => setView('workout')}
+        />
+      )}
+
+      {status === 'ready' && view === 'workoutDetail' && openWorkout && (
+        <WorkoutDetailView
+          workout={openWorkout}
+          onBack={() => setView('workouts')}
+          onAddExercise={handleAddExercise}
+          onDeleteExercise={handleDeleteExercise}
+          onDeleteWorkout={handleDeleteWorkout}
+        />
+      )}
+
+      {status === 'ready' && view === 'weight' && (
+        <WeightView weights={weights} onAdd={handleAddWeight} onDelete={handleDeleteWeight} />
+      )}
+
+      <BottomNav active={view === 'weight' ? 'weight' : 'workout'} onChange={setView} />
     </div>
   )
 }

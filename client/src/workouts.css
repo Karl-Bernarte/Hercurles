@@ -1,0 +1,224 @@
+/* --- Log workout and Create workout buttons --- */
+
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row button {
+  flex: 1;
+  width: auto;
+  padding: 12px 8px;
+  font-size: 14px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #b2e35e;
+  color: #b2e35e;
+}
+
+/* --- Day navigation --- */
+
+.day-nav {
+  margin: 4px 0 16px;
+}
+
+.day-nav-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.day-nav-row input[type="date"] {
+  flex: 1;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  text-align: center;
+}
+
+.day-step {
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 14px;
+}
+
+.day-nav-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.link-button {
+  background: transparent;
+  color: #b2e35e;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.empty-day {
+  text-align: center;
+}
+
+/* --- Workout lists --- */
+
+.section-label {
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 20px 0 10px;
+}
+
+.back-link {
+  margin-bottom: 12px;
+}
+
+.workout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  color: #f4f4f5;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.workout-row .muted {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.detail-title {
+  margin: 4px 0 2px;
+  font-size: 22px;
+}
+
+.row-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.row-inputs > div {
+  flex: 1;
+}
+
+.card select {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.danger-outline {
+  color: #f87171;
+  border-color: #5c1e1e;
+  margin-top: 8px;
+  padding: 10px;
+}
+
+/* --- Calorie goal / left to eat --- */
+
+.calorie-secondary {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.calorie-secondary-box {
+  flex: 1;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.calorie-secondary-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #b2e35e;
+  line-height: 1.2;
+}
+
+.goal-input {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  font-family: inherit;
+  margin: 2px 0;
+}
+
+.week-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 14px;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 999px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.week-summary span:first-child {
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.week-summary span:last-child {
+  color: #b2e35e;
+  font-weight: 700;
+}
+
+.logging-for {
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+
+.session-row {
+  align-items: flex-start;
+}
+
+.session-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-row-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.session-row-sub {
+  font-size: 12px;
+}
