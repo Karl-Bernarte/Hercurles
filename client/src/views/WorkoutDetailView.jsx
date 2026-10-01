@@ -1,16 +1,9 @@
 import { useState } from 'react'
-import { MET_TABLE } from '../api/metTable.js'
+import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EXERCISE_NAMES = Object.keys(MET_TABLE).filter((name) => name !== 'Default')
 const EMPTY_FORM = { name: '', sets: 3, reps: 10 }
 
-export default function WorkoutDetailView({
-  workout,
-  onBack,
-  onAddExercise,
-  onDeleteExercise,
-  onDeleteWorkout,
-}) {
+export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDeleteExercise, onDeleteWorkout }) {
   const [form, setForm] = useState(EMPTY_FORM)
 
   async function handleSubmit(event) {
@@ -47,11 +40,7 @@ export default function WorkoutDetailView({
                   · {exercise.sets} × {exercise.reps}
                 </span>
               </span>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => onDeleteExercise(workout.id, exercise.id)}
-              >
+              <button type="button" className="ghost" onClick={() => onDeleteExercise(workout.id, exercise.id)}>
                 Delete
               </button>
             </div>
@@ -62,19 +51,7 @@ export default function WorkoutDetailView({
       <form onSubmit={handleSubmit} className="card">
         <h2>Add exercise</h2>
 
-        <label htmlFor="exercise-name">Exercise</label>
-        <input
-          id="exercise-name"
-          list="detail-exercise-options"
-          value={form.name}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-          required
-        />
-        <datalist id="detail-exercise-options">
-          {EXERCISE_NAMES.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
+        <ExercisePicker value={form.name} onSelect={(name) => setForm({ ...form, name })} />
 
         <div className="row-inputs">
           <div>
@@ -106,11 +83,7 @@ export default function WorkoutDetailView({
         <button type="submit">+ Add exercise</button>
       </form>
 
-      <button
-        type="button"
-        className="ghost btn-block danger-outline"
-        onClick={() => onDeleteWorkout(workout.id)}
-      >
+      <button type="button" className="ghost btn-block danger-outline" onClick={() => onDeleteWorkout(workout.id)}>
         Delete workout
       </button>
     </>

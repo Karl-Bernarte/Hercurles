@@ -1,19 +1,11 @@
 import { useState } from 'react'
-import { MET_TABLE, calculateCalories } from '../api/metTable.js'
+import { calculateCalories } from '../api/metTable.js'
+import ExercisePicker from '../components/ExercisePicker.jsx'
 
 const EMPTY_SET_FORM = { exercise: '', weight: '', reps: '' }
-const MET_NAMES = Object.keys(MET_TABLE).filter((name) => name !== 'Default')
-
-// Exercises from the workout this log was based on come first in the box.
-function suggestionsFor(session, workouts) {
-  const workout = workouts.find((row) => row.id === session.workoutId)
-  const planned = workout ? workout.exercises.map((exercise) => exercise.name) : []
-  return [...new Set([...planned, ...MET_NAMES])]
-}
 
 export default function SessionDetailView({
   session,
-  workouts,
   bodyWeight,
   onBack,
   onMarkComplete,
@@ -23,7 +15,6 @@ export default function SessionDetailView({
 }) {
   const [form, setForm] = useState(EMPTY_SET_FORM)
   const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
-  const suggestions = suggestionsFor(session, workouts)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -76,19 +67,7 @@ export default function SessionDetailView({
       <form onSubmit={handleSubmit} className="card">
         <h2>Log set</h2>
 
-        <label htmlFor="set-exercise">Exercise</label>
-        <input
-          id="set-exercise"
-          list="session-exercise-options"
-          value={form.exercise}
-          onChange={(event) => setForm({ ...form, exercise: event.target.value })}
-          required
-        />
-        <datalist id="session-exercise-options">
-          {suggestions.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
+        <ExercisePicker value={form.exercise} onSelect={(name) => setForm({ ...form, exercise: name })} />
 
         <div className="row-inputs">
           <div>
@@ -121,11 +100,7 @@ export default function SessionDetailView({
           Mark complete
         </button>
       )}
-      <button
-        type="button"
-        className="ghost btn-block danger-outline"
-        onClick={() => onDelete(session.id)}
-      >
+      <button type="button" className="ghost btn-block danger-outline" onClick={() => onDelete(session.id)}>
         Delete workout log
       </button>
     </>

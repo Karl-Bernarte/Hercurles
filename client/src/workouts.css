@@ -222,3 +222,104 @@
 .session-row-sub {
   font-size: 12px;
 }
+
+.exercise-trigger {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  text-align: left;
+  font-family: inherit;
+}
+
+.exercise-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  z-index: 50;
+}
+
+.exercise-sheet {
+  background: #141414;
+  border-top: 1px solid #2e2e2e;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.exercise-sheet-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.exercise-search {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.exercise-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #2e2e2e;
+  margin-bottom: 8px;
+}
+
+.exercise-tabs button {
+  background: transparent;
+  color: #71717a;
+  border-radius: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 2px solid transparent;
+}
+
+.exercise-tabs button.active {
+  color: #b2e35e;
+  border-bottom: 2px solid #b2e35e;
+}
+
+.exercise-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.exercise-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #f4f4f5;
+  padding: 10px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.exercise-empty {
+  text-align: center;
+  padding: 24px 0;
+}
