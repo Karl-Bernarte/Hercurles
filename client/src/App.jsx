@@ -94,6 +94,15 @@ export default function App() {
   async function handleLogFromWorkout(workoutId) {
     const workout = workouts.find((row) => row.id === workoutId)
     if (!workout) return
+    const existing = sessions.find(
+      (session) => session.workoutId === workoutId && session.date === activeDate
+    )
+    if (existing) {
+      setOpenSessionId(existing.id)
+      setView('sessionDetail')
+      return
+    }
+
     try {
       const created = await createSession({
         date: activeDate,
@@ -102,18 +111,35 @@ export default function App() {
         workoutId: workout.id,
         title: workout.name,
       })
-      
       let builtSets = []
       for (const exercise of workout.exercises) {
-        const set = await addSet(created.id, { exercise: exercise.name, weight: 0, reps: exercise.reps })
+          const set = await addSet(created.id, { exercise: exercise.name, weight: exercise.weight ?? 0, reps: exercise.reps })
         builtSets = [...builtSets, set]
       }
-      await updateSession(created.id, { complete: true })
-      const finalSession = { ...created, sets: builtSets, complete: true }
+      const finalSession = { ...created, sets: builtSets }
 
       setSessions((current) => [finalSession, ...current].sort(newestFirst))
       setPickedDate(finalSession.date === today ? null : finalSession.date)
       setOpenSessionId(finalSession.id)
+      setView('sessionDetail')
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  // Quick path: no saved workout, just an empty session to log sets into by hand.
+  async function handleLogExercise() {
+    try {
+      const created = await createSession({
+        date: activeDate,
+        durationMinutes: DEFAULT_LOG_DURATION,
+        notes: '',
+        workoutId: null,
+        title: '',
+      })
+      setSessions((current) => [created, ...current].sort(newestFirst))
+      setPickedDate(created.date === today ? null : created.date)
+      setOpenSessionId(created.id)
       setView('sessionDetail')
     } catch (caught) {
       setError(caught)
@@ -287,6 +313,7 @@ export default function App() {
             setView('sessionDetail')
           }}
           onOpenWorkouts={() => setView('workouts')}
+          onLogExercise={handleLogExercise}
         />
       )}
 

@@ -78,7 +78,7 @@ export default function WorkoutView({
 
       <div className="button-row">
         <button type="button" onClick={onOpenWorkouts}>
-          + Create workout
+          + Log Workout
         </button>
         <button type="button" className="btn-outline" onClick={onLogExercise}>
           + Log Exercise

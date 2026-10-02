@@ -165,6 +165,7 @@ export async function addExercise(workoutId, input) {
   const exercise = {
     id: crypto.randomUUID(),
     name: input.name,
+    weight: Number(input.weight) || 0,
     sets: Number(input.sets),
     reps: Number(input.reps),
   }

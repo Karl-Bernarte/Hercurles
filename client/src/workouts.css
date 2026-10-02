@@ -69,7 +69,7 @@
   text-align: center;
 }
 
-/* --- Workout lists --- */
+/* --- Workout / session lists --- */
 
 .section-label {
   color: #71717a;
@@ -84,16 +84,25 @@
   margin-bottom: 12px;
 }
 
+.list {
+  width: 100%;
+}
+
+.list li {
+  width: 100%;
+}
+
 .workout-row-wrap {
   display: flex;
   gap: 8px;
   align-items: stretch;
+  width: 100%;
   margin-bottom: 8px;
 }
 
 .workout-row {
   display: flex;
-  flex: 1;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
   background: #141414;
@@ -106,15 +115,39 @@
   text-align: left;
 }
 
+.workout-row-wrap .workout-row {
+  flex: 1;
+  width: auto;
+}
+
+.workout-row .muted {
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .workout-edit {
   flex-shrink: 0;
   padding: 0 14px;
   border-radius: 12px;
 }
 
-.workout-row .muted {
+.session-row {
+  align-items: flex-start;
+}
+
+.session-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-row-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.session-row-sub {
   font-size: 12px;
-  font-weight: 400;
 }
 
 .detail-title {
@@ -216,24 +249,7 @@
   margin-bottom: 8px;
 }
 
-.session-row {
-  align-items: flex-start;
-}
-
-.session-row-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.session-row-title {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.session-row-sub {
-  font-size: 12px;
-}
+/* --- Exercise picker --- */
 
 .exercise-trigger {
   width: 100%;
@@ -245,10 +261,6 @@
   font-size: 14px;
   text-align: left;
   font-family: inherit;
-}
-
-.exercise-trigger-icon {
-  margin-right: 4px;
 }
 
 .exercise-overlay {
@@ -274,12 +286,6 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-@media (min-width: 640px) {
-  .exercise-sheet {
-    max-width: 480px;
-  }
 }
 
 .exercise-sheet-header {
@@ -317,34 +323,20 @@
 }
 
 .exercise-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: block;
   width: 100%;
   text-align: left;
   background: transparent;
   color: #f4f4f5;
   padding: 12px 10px;
   font-size: 14px;
-  font-weight: 600;
-  border-radius: 12px;
+  font-weight: 500;
+  border-radius: 10px;
 }
 
 .exercise-item:hover,
 .exercise-item:active {
   background: #1e1e1e;
-}
-
-.exercise-item-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1e1e1e;
-  border-radius: 50%;
-  font-size: 15px;
 }
 
 .exercise-empty {

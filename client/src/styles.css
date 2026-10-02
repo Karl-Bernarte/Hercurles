@@ -19,11 +19,15 @@ body {
   padding: 20px 16px 100px; /* bottom room so the fixed nav never covers content */
 }
 
+header {
+  text-align: center;
+}
+
 header h1 {
   color: #b2e35e;
   font-weight: 800;
   font-size: 24px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .lede {
@@ -31,7 +35,6 @@ header h1 {
   font-size: 14px;
   margin-top: 0;
 }
-
 .card {
   background: #141414;
   border: 1px solid #2e2e2e;

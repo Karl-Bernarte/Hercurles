@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EMPTY_FORM = { name: '', sets: 3, reps: 10 }
+const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 10 }
 
 export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDeleteExercise, onDeleteWorkout }) {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -11,6 +11,7 @@ export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDe
     if (!form.name.trim()) return
     const saved = await onAddExercise(workout.id, {
       name: form.name.trim(),
+      weight: Number(form.weight) || 0,
       sets: Number(form.sets),
       reps: Number(form.reps),
     })
@@ -37,7 +38,7 @@ export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDe
               <span>
                 {index + 1}. {exercise.name}{' '}
                 <span className="muted">
-                  · {exercise.sets} × {exercise.reps}
+                  · {exercise.weight ?? 0} kg · {exercise.sets} × {exercise.reps}
                 </span>
               </span>
               <button type="button" className="ghost" onClick={() => onDeleteExercise(workout.id, exercise.id)}>
@@ -52,6 +53,17 @@ export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDe
         <h2>Add exercise</h2>
 
         <ExercisePicker value={form.name} onSelect={(name) => setForm({ ...form, name })} />
+
+        <label htmlFor="exercise-weight">Weight (kg)</label>
+        <input
+          id="exercise-weight"
+          type="number"
+          min="0"
+          step="0.5"
+          value={form.weight}
+          onChange={(event) => setForm({ ...form, weight: event.target.value })}
+          required
+        />
 
         <div className="row-inputs">
           <div>
