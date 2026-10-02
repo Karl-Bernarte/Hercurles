@@ -12,8 +12,8 @@ export default function WorkoutView({
   bodyWeight,
   onDateChange,
   onOpenSession,
-  onLogWorkout,
   onOpenWorkouts,
+  onLogExercise,
 }) {
   const [goal, setGoal] = useState(() => getCalorieGoal())
 
@@ -77,11 +77,11 @@ export default function WorkoutView({
       </div>
 
       <div className="button-row">
-        <button type="button" onClick={onLogWorkout}>
-          + Log workout
-        </button>
-        <button type="button" className="btn-outline" onClick={onOpenWorkouts}>
+        <button type="button" onClick={onOpenWorkouts}>
           + Create workout
+        </button>
+        <button type="button" className="btn-outline" onClick={onLogExercise}>
+          + Log Exercise
         </button>
       </div>
       <p className="hint">Estimates use {bodyWeight} kg, your latest entry in the Weight tab.</p>
@@ -91,7 +91,7 @@ export default function WorkoutView({
       {daySessions.length === 0 ? (
         <p className="card muted empty-day">
           {isToday
-            ? 'Nothing logged today yet. Tap Log workout to start.'
+            ? 'Nothing logged today yet. Tap Create workout or Log Exercise to start.'
             : 'Nothing was logged on this day.'}
         </p>
       ) : (

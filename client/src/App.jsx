@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
   listSessions,
-  createSession,
   updateSession,
   deleteSession,
   addSet,
   deleteSet,
+  createSession,
   listWeights,
   addWeight,
   deleteWeight,
@@ -18,19 +18,19 @@ import {
 import { todayLocal, formatDay } from './dateUtils.js'
 import BottomNav from './components/BottomNav.jsx'
 import WorkoutView from './views/WorkoutView.jsx'
-import LogWorkoutView from './views/LogWorkoutView.jsx'
 import SessionDetailView from './views/SessionDetailView.jsx'
 import WorkoutsView from './views/WorkoutsView.jsx'
 import WorkoutDetailView from './views/WorkoutDetailView.jsx'
 import WeightView from './views/WeightView.jsx'
 
 const DEFAULT_BODY_WEIGHT = 70
+const DEFAULT_LOG_DURATION = 45
 
 const newestFirst = (a, b) => b.date.localeCompare(a.date)
 const oldestFirst = (a, b) => a.recordedAt.localeCompare(b.recordedAt)
 
 export default function App() {
-  // workout | log | sessionDetail | workouts | workoutDetail | weight
+  // workout | sessionDetail | workouts | workoutDetail | weight
   const [view, setView] = useState('workout')
   const [status, setStatus] = useState('loading') // loading | ready | error
   const [sessions, setSessions] = useState([])
@@ -41,8 +41,6 @@ export default function App() {
   const [openSessionId, setOpenSessionId] = useState(null)
   const [openWorkoutId, setOpenWorkoutId] = useState(null)
 
-  // "Today" is re-checked every minute, so a tab left open past midnight moves
-  // to the new day by itself. pickedDate stays null while following today.
   const [today, setToday] = useState(todayLocal())
   const [pickedDate, setPickedDate] = useState(null)
   const activeDate = pickedDate ?? today
@@ -55,10 +53,7 @@ export default function App() {
   async function load() {
     setStatus('loading')
     setError(null)
-
-    // A free-tier API sleeps. Say so instead of spinning silently.
     const timer = setTimeout(() => setSlow(true), 3000)
-
     try {
       const [sessionRows, weightRows, workoutRows] = await Promise.all([
         listSessions(),
@@ -82,7 +77,6 @@ export default function App() {
     load()
   }, [])
 
-  // Calorie estimates use the most recent weigh-in.
   const bodyWeight =
     weights.length > 0 ? weights[weights.length - 1].weightKg : DEFAULT_BODY_WEIGHT
 
@@ -94,14 +88,32 @@ export default function App() {
     setPickedDate(value === today ? null : value)
   }
 
-  // Sessions (logged workouts)
-
-  async function handleCreateSession(input) {
+  // Logging a saved workout: create today's session, add one set per planned
+  // exercise, then mark it complete, since picking it from the list IS the
+  // "I did this" action.
+  async function handleLogFromWorkout(workoutId) {
+    const workout = workouts.find((row) => row.id === workoutId)
+    if (!workout) return
     try {
-      const created = await createSession(input)
-      setSessions((current) => [created, ...current].sort(newestFirst))
-      setPickedDate(created.date === today ? null : created.date)
-      setOpenSessionId(created.id) // open it so sets can go in right away
+      const created = await createSession({
+        date: activeDate,
+        durationMinutes: DEFAULT_LOG_DURATION,
+        notes: '',
+        workoutId: workout.id,
+        title: workout.name,
+      })
+      
+      let builtSets = []
+      for (const exercise of workout.exercises) {
+        const set = await addSet(created.id, { exercise: exercise.name, weight: 0, reps: exercise.reps })
+        builtSets = [...builtSets, set]
+      }
+      await updateSession(created.id, { complete: true })
+      const finalSession = { ...created, sets: builtSets, complete: true }
+
+      setSessions((current) => [finalSession, ...current].sort(newestFirst))
+      setPickedDate(finalSession.date === today ? null : finalSession.date)
+      setOpenSessionId(finalSession.id)
       setView('sessionDetail')
     } catch (caught) {
       setError(caught)
@@ -162,14 +174,12 @@ export default function App() {
     }
   }
 
-  // Workouts (named exercise lists)
-
   async function handleCreateWorkout(name) {
     try {
       const created = await createWorkout({ name })
       setWorkouts((current) => [...current, created])
       setOpenWorkoutId(created.id)
-      setView('workoutDetail') // straight into the new list so exercises can go in
+      setView('workoutDetail')
       return true
     } catch (caught) {
       setError(caught)
@@ -224,8 +234,6 @@ export default function App() {
     }
   }
 
-  // Weight
-
   async function handleAddWeight(input) {
     try {
       const created = await addWeight(input)
@@ -278,24 +286,13 @@ export default function App() {
             setOpenSessionId(id)
             setView('sessionDetail')
           }}
-          onLogWorkout={() => setView('log')}
           onOpenWorkouts={() => setView('workouts')}
-        />
-      )}
-
-      {status === 'ready' && view === 'log' && (
-        <LogWorkoutView
-          workouts={workouts}
-          forDate={activeDate}
-          onSubmit={handleCreateSession}
-          onCancel={() => setView('workout')}
         />
       )}
 
       {status === 'ready' && view === 'sessionDetail' && openSession && (
         <SessionDetailView
           session={openSession}
-          workouts={workouts}
           bodyWeight={bodyWeight}
           onBack={() => setView('workout')}
           onMarkComplete={handleMarkComplete}
@@ -309,10 +306,11 @@ export default function App() {
         <WorkoutsView
           workouts={workouts}
           onCreate={handleCreateWorkout}
-          onOpen={(id) => {
+          onOpenForEdit={(id) => {
             setOpenWorkoutId(id)
             setView('workoutDetail')
           }}
+          onLog={handleLogFromWorkout}
           onBack={() => setView('workout')}
         />
       )}

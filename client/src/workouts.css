@@ -84,20 +84,32 @@
   margin-bottom: 12px;
 }
 
+.workout-row-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+
 .workout-row {
   display: flex;
+  flex: 1;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
   background: #141414;
   border: 1px solid #2e2e2e;
   border-radius: 12px;
   padding: 14px 16px;
-  margin-bottom: 8px;
   color: #f4f4f5;
   font-size: 15px;
   font-weight: 600;
   text-align: left;
+}
+
+.workout-edit {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-radius: 12px;
 }
 
 .workout-row .muted {
@@ -229,42 +241,57 @@
   border: 1px solid #2e2e2e;
   color: #f4f4f5;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 10px;
   font-size: 14px;
   text-align: left;
   font-family: inherit;
 }
 
+.exercise-trigger-icon {
+  margin-right: 4px;
+}
+
 .exercise-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
   z-index: 50;
 }
 
 .exercise-sheet {
   background: #141414;
-  border-top: 1px solid #2e2e2e;
-  border-radius: 16px 16px 0 0;
-  padding: 16px;
+  border: 1px solid #2e2e2e;
+  border-radius: 28px;
+  padding: 20px 16px;
   width: 100%;
-  max-height: 80vh;
+  max-width: 480px;
+  height: 85vh;
+  max-height: 700px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 640px) {
+  .exercise-sheet {
+    max-width: 480px;
+  }
 }
 
 .exercise-sheet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .exercise-sheet-header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .exercise-search {
@@ -272,54 +299,55 @@
   background: #0a0a0a;
   border: 1px solid #2e2e2e;
   color: #f4f4f5;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   font-size: 14px;
   font-family: inherit;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .exercise-tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid #2e2e2e;
-  margin-bottom: 8px;
-}
-
-.exercise-tabs button {
-  background: transparent;
-  color: #71717a;
-  border-radius: 0;
-  padding: 8px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  border-bottom: 2px solid transparent;
-}
-
-.exercise-tabs button.active {
-  color: #b2e35e;
-  border-bottom: 2px solid #b2e35e;
+  margin-bottom: 10px;
 }
 
 .exercise-list {
   overflow-y: auto;
   flex: 1;
+  margin: 0 -6px;
 }
 
 .exercise-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   text-align: left;
   background: transparent;
   color: #f4f4f5;
-  padding: 10px 4px;
+  padding: 12px 10px;
   font-size: 14px;
-  font-weight: 500;
-  border-radius: 0;
-  border-bottom: 1px solid #1e1e1e;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.exercise-item:hover,
+.exercise-item:active {
+  background: #1e1e1e;
+}
+
+.exercise-item-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  border-radius: 50%;
+  font-size: 15px;
 }
 
 .exercise-empty {
   text-align: center;
-  padding: 24px 0;
+  padding: 40px 0;
 }

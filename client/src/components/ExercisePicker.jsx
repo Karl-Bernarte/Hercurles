@@ -48,7 +48,7 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
               onChange={(event) => setQuery(event.target.value)}
             />
 
-            <div className="exercise-tabs">
+            <div className="segmented exercise-tabs">
               <button type="button" className={tab === 'History' ? 'active' : ''} onClick={() => setTab('History')}>
                 History
               </button>

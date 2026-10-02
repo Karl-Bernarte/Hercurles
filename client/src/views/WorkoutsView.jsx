@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function WorkoutsView({ workouts, onCreate, onOpen, onBack }) {
+export default function WorkoutsView({ workouts, onCreate, onOpenForEdit, onLog, onBack }) {
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -37,17 +37,25 @@ export default function WorkoutsView({ workouts, onCreate, onOpen, onBack }) {
       </form>
 
       <div className="section-label">Your workouts</div>
+      <p className="hint">Tap a workout to log it as today's session.</p>
       {workouts.length === 0 ? (
         <p className="muted">No workouts yet. Name your first one above.</p>
       ) : (
         <ul className="list">
           {workouts.map((workout) => (
-            <li key={workout.id}>
-              <button type="button" className="workout-row" onClick={() => onOpen(workout.id)}>
+            <li key={workout.id} className="workout-row-wrap">
+              <button type="button" className="workout-row" onClick={() => onLog(workout.id)}>
                 <span>{workout.name}</span>
                 <span className="muted">
-                  {workout.exercises.length} exercise{workout.exercises.length === 1 ? '' : 's'} ›
+                  {workout.exercises.length} exercise{workout.exercises.length === 1 ? '' : 's'}
                 </span>
+              </button>
+              <button
+                type="button"
+                className="ghost workout-edit"
+                onClick={() => onOpenForEdit(workout.id)}
+              >
+                Edit
               </button>
             </li>
           ))}
