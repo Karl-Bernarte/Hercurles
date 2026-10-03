@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { calculateCalories } from '../api/metTable.js'
 import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EMPTY_SET_FORM = { exercise: '', weight: '', reps: '' }
+const EMPTY_SET_FORM = { exercise: '', weight: '', sets: 3, reps: '' }
 
 export default function SessionDetailView({
   session,
@@ -14,14 +14,17 @@ export default function SessionDetailView({
   onDeleteSet,
 }) {
   const [form, setForm] = useState(EMPTY_SET_FORM)
+
   const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
+  const totalSets = session.sets.reduce((sum, set) => sum + (Number(set.sets) || 1), 0)
 
   async function handleSubmit(event) {
     event.preventDefault()
     if (!form.exercise.trim()) return
     const saved = await onAddSet(session.id, {
       exercise: form.exercise.trim(),
-      weight: Number(form.weight),
+      weight: Number(form.weight) || 0,
+      sets: Number(form.sets) || 1,
       reps: Number(form.reps),
     })
     if (saved) setForm(EMPTY_SET_FORM)
@@ -40,12 +43,12 @@ export default function SessionDetailView({
         <span className="kcal-tag">{kcal} kcal</span>
       </div>
       <p className="muted">
-        {session.durationMinutes} min · {session.sets.length} set{session.sets.length === 1 ? '' : 's'}
+        {session.durationMinutes} min · {totalSets} set{totalSets === 1 ? '' : 's'}
         {session.notes ? ` · ${session.notes}` : ''}
       </p>
 
       {session.sets.length === 0 ? (
-        <p className="muted">No sets logged yet. Add your first below.</p>
+        <p className="muted">No exercises logged yet. Add your first below.</p>
       ) : (
         <div className="card">
           {session.sets.map((set, index) => (
@@ -53,7 +56,7 @@ export default function SessionDetailView({
               <span>
                 {index + 1}. {set.exercise}{' '}
                 <span className="muted">
-                  · {set.weight} kg × {set.reps} reps
+                  · {set.weight} kg · {set.sets ?? 1} sets × {set.reps} reps
                 </span>
               </span>
               <button type="button" className="ghost" onClick={() => onDeleteSet(session.id, set.id)}>
@@ -65,18 +68,29 @@ export default function SessionDetailView({
       )}
 
       <form onSubmit={handleSubmit} className="card">
-        <h2>Log set</h2>
+        <h2>Log exercise</h2>
 
         <ExercisePicker value={form.exercise} onSelect={(name) => setForm({ ...form, exercise: name })} />
 
+        <label htmlFor="set-weight">Weight (kg)</label>
+        <input
+          id="set-weight"
+          type="number"
+          value={form.weight}
+          onChange={(event) => setForm({ ...form, weight: event.target.value })}
+          required
+        />
+
         <div className="row-inputs">
           <div>
-            <label htmlFor="set-weight">Weight (kg)</label>
+            <label htmlFor="set-sets">Sets</label>
             <input
-              id="set-weight"
+              id="set-sets"
               type="number"
-              value={form.weight}
-              onChange={(event) => setForm({ ...form, weight: event.target.value })}
+              min="1"
+              max="20"
+              value={form.sets}
+              onChange={(event) => setForm({ ...form, sets: event.target.value })}
               required
             />
           </div>
@@ -92,7 +106,7 @@ export default function SessionDetailView({
           </div>
         </div>
 
-        <button type="submit">+ Log set</button>
+        <button type="submit">+ Log exercise</button>
       </form>
 
       {!session.complete && (

@@ -125,10 +125,13 @@
   font-weight: 400;
 }
 
-.workout-edit {
+.workout-log-btn {
   flex-shrink: 0;
-  padding: 0 14px;
+  min-width: 84px;
+  padding: 0 18px;
   border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
 }
 
 .session-row {

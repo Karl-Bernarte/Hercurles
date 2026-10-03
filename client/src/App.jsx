@@ -88,12 +88,13 @@ export default function App() {
     setPickedDate(value === today ? null : value)
   }
 
-  // Logging a saved workout: create today's session, add one set per planned
-  // exercise, then mark it complete, since picking it from the list IS the
-  // "I did this" action.
+  // Logging a saved workout: if today already has a session from this
+  // workout, reopen it instead of creating a duplicate. Otherwise create one
+  // and expand each planned exercise into its actual number of sets.
   async function handleLogFromWorkout(workoutId) {
     const workout = workouts.find((row) => row.id === workoutId)
     if (!workout) return
+
     const existing = sessions.find(
       (session) => session.workoutId === workoutId && session.date === activeDate
     )
@@ -113,7 +114,12 @@ export default function App() {
       })
       let builtSets = []
       for (const exercise of workout.exercises) {
-          const set = await addSet(created.id, { exercise: exercise.name, weight: exercise.weight ?? 0, reps: exercise.reps })
+        const set = await addSet(created.id, {
+          exercise: exercise.name,
+          weight: exercise.weight ?? 0,
+          sets: exercise.sets ?? 1,
+          reps: exercise.reps,
+        })
         builtSets = [...builtSets, set]
       }
       const finalSession = { ...created, sets: builtSets }
@@ -349,6 +355,7 @@ export default function App() {
           onAddExercise={handleAddExercise}
           onDeleteExercise={handleDeleteExercise}
           onDeleteWorkout={handleDeleteWorkout}
+          onLogWorkout={handleLogFromWorkout}
         />
       )}
 

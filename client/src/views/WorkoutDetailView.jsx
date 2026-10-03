@@ -3,7 +3,14 @@ import ExercisePicker from '../components/ExercisePicker.jsx'
 
 const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 10 }
 
-export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDeleteExercise, onDeleteWorkout }) {
+export default function WorkoutDetailView({
+  workout,
+  onBack,
+  onAddExercise,
+  onDeleteExercise,
+  onDeleteWorkout,
+  onLogWorkout,
+}) {
   const [form, setForm] = useState(EMPTY_FORM)
 
   async function handleSubmit(event) {
@@ -38,7 +45,7 @@ export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDe
               <span>
                 {index + 1}. {exercise.name}{' '}
                 <span className="muted">
-                  · {exercise.weight ?? 0} kg · {exercise.sets} × {exercise.reps}
+                  · {exercise.weight ?? 0} kg · {exercise.sets} sets × {exercise.reps} reps
                 </span>
               </span>
               <button type="button" className="ghost" onClick={() => onDeleteExercise(workout.id, exercise.id)}>
@@ -94,6 +101,12 @@ export default function WorkoutDetailView({ workout, onBack, onAddExercise, onDe
 
         <button type="submit">+ Add exercise</button>
       </form>
+
+      {workout.exercises.length > 0 && (
+        <button type="button" className="btn-block" onClick={() => onLogWorkout(workout.id)}>
+          Log Workout
+        </button>
+      )}
 
       <button type="button" className="ghost btn-block danger-outline" onClick={() => onDeleteWorkout(workout.id)}>
         Delete workout

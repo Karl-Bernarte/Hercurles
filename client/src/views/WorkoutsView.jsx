@@ -37,25 +37,21 @@ export default function WorkoutsView({ workouts, onCreate, onOpenForEdit, onLog,
       </form>
 
       <div className="section-label">Your workouts</div>
-      <p className="hint">Tap a workout to log it as today's session.</p>
+      <p className="hint">Tap a workout to view or edit it. Tap Log to log it as today's session.</p>
       {workouts.length === 0 ? (
         <p className="muted">No workouts yet. Name your first one above.</p>
       ) : (
         <ul className="list">
           {workouts.map((workout) => (
             <li key={workout.id} className="workout-row-wrap">
-              <button type="button" className="workout-row" onClick={() => onLog(workout.id)}>
+              <button type="button" className="workout-row" onClick={() => onOpenForEdit(workout.id)}>
                 <span>{workout.name}</span>
                 <span className="muted">
                   {workout.exercises.length} exercise{workout.exercises.length === 1 ? '' : 's'}
                 </span>
               </button>
-              <button
-                type="button"
-                className="ghost workout-edit"
-                onClick={() => onOpenForEdit(workout.id)}
-              >
-                Edit
+              <button type="button" className="workout-log-btn" onClick={() => onLog(workout.id)}>
+                Log
               </button>
             </li>
           ))}
