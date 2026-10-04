@@ -1,3 +1,5 @@
+const CUSTOM_EXERCISES_KEY = 'hercurles:custom-exercises'
+
 export const EXERCISE_CATALOG = [
   { name: 'Squat', category: 'Strength', met: 6.0 },
   { name: 'Bench Press', category: 'Strength', met: 5.0 },
@@ -176,13 +178,53 @@ export const EXERCISE_CATALOG = [
 
 export const CATEGORIES = ['Strength', 'Cardio']
 
+export function listCustomExercises() {
+  const stored = localStorage.getItem(CUSTOM_EXERCISES_KEY)
+  if (!stored) return []
+
+  try {
+    const exercises = JSON.parse(stored)
+    if (Array.isArray(exercises)) return exercises
+  } catch {
+    localStorage.removeItem(CUSTOM_EXERCISES_KEY)
+  }
+  return []
+}
+
+export function addCustomExercise(input) {
+  const name = input.name.trim()
+  const met = Number(input.met)
+  const category = input.category
+
+  if (!name || name.length > 100) {
+    throw new Error('Exercise name must be between 1 and 100 characters.')
+  }
+  if (!Number.isFinite(met) || met < 0.1 || met > 20) {
+    throw new Error('MET must be between 0.1 and 20.')
+  }
+  if (!CATEGORIES.includes(category)) {
+    throw new Error('Choose Strength or Cardio as the exercise category.')
+  }
+
+  const exercises = listCustomExercises()
+  const exists = [...EXERCISE_CATALOG, ...exercises].some(
+    (exercise) => exercise.name.toLowerCase() === name.toLowerCase()
+  )
+  if (exists) throw new Error('An exercise with that name already exists.')
+
+  const exercise = { name, category, met }
+  localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify([...exercises, exercise]))
+  return exercise
+}
+
 export const MET_TABLE = Object.fromEntries(
   EXERCISE_CATALOG.map((exercise) => [exercise.name, exercise.met])
 )
 MET_TABLE.Default = 5.0
 
 export function getMET(exercise) {
-  return MET_TABLE[exercise] || MET_TABLE.Default
+  if (Object.hasOwn(MET_TABLE, exercise)) return MET_TABLE[exercise]
+  return listCustomExercises().find((item) => item.name === exercise)?.met ?? MET_TABLE.Default
 }
 
 export function calculateCalories(sets, bodyWeightKg, durationMinutes) {
