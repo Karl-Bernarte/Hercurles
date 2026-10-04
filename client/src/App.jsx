@@ -25,6 +25,7 @@ import WeightView from './views/WeightView.jsx'
 import FoodsView from './views/FoodsView.jsx'
 import {
   addCustomFood,
+  deleteCustomFood,
   deleteFoodLog,
   listCustomFoods,
   listFoodLogs,
@@ -309,6 +310,16 @@ export default function App() {
     }
   }
 
+  function handleDeleteCustomFood(id) {
+    if (!window.confirm('Delete this custom food? Existing food logs will be kept.')) return
+    try {
+      deleteCustomFood(id)
+      setCustomFoods((current) => current.filter((food) => String(food.id) !== String(id)))
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
   function handleLogFood(food, date, quantity) {
     try {
       const created = logFood(food, date, quantity)
@@ -409,8 +420,10 @@ export default function App() {
           today={today}
           customFoods={customFoods}
           foodLogs={foodLogs.filter((entry) => entry.date === activeDate)}
+          allFoodLogs={foodLogs}
           onDateChange={handleDateChange}
           onAddCustomFood={handleAddCustomFood}
+          onDeleteCustomFood={handleDeleteCustomFood}
           onLogFood={handleLogFood}
           onDeleteFoodLog={handleDeleteFoodLog}
         />

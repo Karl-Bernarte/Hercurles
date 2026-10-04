@@ -1,5 +1,5 @@
-const CUSTOM_FOODS_KEY = 'hercurcles:custom-foods'
-const FOOD_LOGS_KEY = 'hercurcles:food-logs'
+const CUSTOM_FOODS_KEY = 'hercurles:custom-foods'
+const FOOD_LOGS_KEY = 'hercurles:food-logs'
 
 export const BUILT_IN_FOODS = [
   { id: 'banana', name: 'Banana', serving: '1 medium', calories: 105 },
@@ -43,6 +43,10 @@ export function addCustomFood(input) {
   }
   writeRows(CUSTOM_FOODS_KEY, [...listCustomFoods(), food])
   return food
+}
+
+export function deleteCustomFood(id) {
+  writeRows(CUSTOM_FOODS_KEY, listCustomFoods().filter((food) => String(food.id) !== String(id)))
 }
 
 export function listFoodLogs() {

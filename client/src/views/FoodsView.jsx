@@ -8,14 +8,17 @@ export default function FoodsView({
   today,
   customFoods,
   foodLogs,
+  allFoodLogs,
   onDateChange,
   onAddCustomFood,
+  onDeleteCustomFood,
   onLogFood,
   onDeleteFoodLog,
 }) {
+  const [tab, setTab] = useState('History')
   const [query, setQuery] = useState('')
-  const [showCustomForm, setShowCustomForm] = useState(false)
   const [selectedFood, setSelectedFood] = useState(null)
+  const [showCustomForm, setShowCustomForm] = useState(false)
   const [quantity, setQuantity] = useState('1')
   const [form, setForm] = useState({ name: '', serving: '', calories: '' })
   const foods = useMemo(() => {
@@ -24,6 +27,24 @@ export default function FoodsView({
       `${food.name} ${food.serving}`.toLowerCase().includes(search)
     )
   }, [customFoods, query])
+  const recentFoods = useMemo(() => {
+    const foodById = new Map([...BUILT_IN_FOODS, ...customFoods].map((food) => [food.id, food]))
+    const recentIds = []
+    const seen = new Set()
+
+    for (const entry of [...allFoodLogs].reverse()) {
+      if (!seen.has(entry.foodId) && foodById.has(entry.foodId)) {
+        seen.add(entry.foodId)
+        recentIds.push(entry.foodId)
+        if (recentIds.length === 5) break
+      }
+    }
+
+    return recentIds.map((id) => foodById.get(id))
+  }, [allFoodLogs, customFoods])
+  const filteredRecentFoods = recentFoods.filter((food) =>
+    `${food.name} ${food.serving}`.toLowerCase().includes(query.trim().toLowerCase())
+  )
   const loggedCalories = foodLogs.reduce((sum, entry) => sum + entry.calories, 0)
   const quantityValue = Number(quantity)
   const estimatedCalories =
@@ -47,57 +68,117 @@ export default function FoodsView({
     setQuantity('1')
   }
 
+  function renderFoodButton(food) {
+    return (
+      <button
+        key={food.id}
+        type="button"
+        className="food-picker-item"
+        onClick={() => {
+          setSelectedFood(food)
+          setQuantity('1')
+        }}
+      >
+        <span className="food-picker-info">
+          <strong>{food.name}</strong>
+          <span>{food.serving}</span>
+        </span>
+        <span className="food-picker-calories">
+          {food.calories} kcal <span aria-hidden="true">+</span>
+        </span>
+      </button>
+    )
+  }
+
+  function renderCustomFood(food) {
+    return (
+      <div className="food-custom-row" key={food.id}>
+        {renderFoodButton(food)}
+        <button
+          type="button"
+          className="ghost food-delete-button"
+          aria-label={`Delete custom food ${food.name}`}
+          onClick={() => onDeleteCustomFood(food.id)}
+        >
+          Delete
+        </button>
+      </div>
+    )
+  }
+
   return (
     <>
       <DayNav date={date} today={today} onChange={onDateChange} />
 
       <section className="food-picker-sheet" aria-label="Select food to log">
-        <div className="exercise-sheet-header">
-          <h2>Select food</h2>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => setShowCustomForm(true)}
-          >
-            + Custom
-          </button>
+        <div className="food-tabs" role="tablist" aria-label="Food options">
+          {['History', 'Food List', 'Custom'].map((name) => (
+            <button
+              key={name}
+              type="button"
+              role="tab"
+              aria-selected={tab === name}
+              className={tab === name ? 'active' : ''}
+              onClick={() => {
+                setTab(name)
+                setQuery('')
+              }}
+            >
+              {name}
+            </button>
+          ))}
         </div>
 
-        <input
-          type="search"
-          className="exercise-search"
-          placeholder="Search for food"
-          aria-label="Search foods"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <p className="food-picker-date">Adding to {formatDay(date)}</p>
+        {tab !== 'Custom' && (
+          <>
+            <input
+              type="search"
+              className="exercise-search"
+              placeholder={tab === 'History' ? 'Search food history' : 'Search food list'}
+              aria-label={tab === 'History' ? 'Search food history' : 'Search foods'}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <p className="food-picker-date">Adding to {formatDay(date)}</p>
 
-        <div className="food-picker-list">
-          {foods.length === 0 ? (
-            <p className="muted exercise-empty">No foods match your search.</p>
-          ) : (
-            foods.map((food) => (
-              <button
-                key={food.id}
-                type="button"
-                className="food-picker-item"
-                onClick={() => {
-                  setSelectedFood(food)
-                  setQuantity('1')
-                }}
-              >
-                <span className="food-picker-info">
-                  <strong>{food.name}</strong>
-                  <span>{food.serving}</span>
-                </span>
-                <span className="food-picker-calories">
-                  {food.calories} kcal <span aria-hidden="true">+</span>
-                </span>
-              </button>
-            ))
-          )}
-        </div>
+            <div className="food-picker-list">
+              {tab === 'History' ? (
+                filteredRecentFoods.length === 0 ? (
+                  <p className="muted exercise-empty">
+                    {recentFoods.length === 0
+                      ? 'Foods you log will show up here.'
+                      : 'No recent foods match your search.'}
+                  </p>
+                ) : (
+                  filteredRecentFoods.map(renderFoodButton)
+                )
+              ) : foods.length === 0 ? (
+                <p className="muted exercise-empty">No foods match your search.</p>
+              ) : (
+                foods.map(renderFoodButton)
+              )}
+            </div>
+          </>
+        )}
+
+        {tab === 'Custom' && (
+          <>
+            <button
+              type="button"
+              className="food-add-custom"
+              onClick={() => setShowCustomForm(true)}
+            >
+              + Add custom food
+            </button>
+            <div className="food-picker-list">
+              {customFoods.length === 0 ? (
+                <p className="muted exercise-empty">Your custom foods will appear here.</p>
+              ) : (
+                customFoods.map(renderCustomFood)
+              )}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="food-log-section" aria-labelledby="logged-foods-title">
@@ -188,6 +269,7 @@ export default function FoodsView({
                 Close
               </button>
             </div>
+            <p className="muted food-serving-note">Save a food with its serving size and calories.</p>
 
             <label htmlFor="food-name">Food name</label>
             <input
@@ -223,6 +305,7 @@ export default function FoodsView({
           </form>
         </div>
       )}
+
     </>
   )
 }
