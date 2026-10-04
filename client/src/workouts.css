@@ -252,6 +252,206 @@
   margin-bottom: 8px;
 }
 
+/* --- Food logging --- */
+
+.food-picker-sheet {
+  display: flex;
+  flex-direction: column;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 24px;
+  padding: 16px;
+  height: min(55vh, 440px);
+  min-height: 300px;
+}
+
+.food-picker-sheet .exercise-sheet-header {
+  margin-bottom: 12px;
+}
+
+.food-picker-sheet .exercise-search {
+  margin-bottom: 8px;
+}
+
+.food-picker-date {
+  margin: 0 0 4px;
+  color: #71717a;
+  font-size: 11px;
+  text-align: right;
+}
+
+.food-picker-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0 -6px;
+}
+
+.food-picker-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  background: transparent;
+  color: #f4f4f5;
+  text-align: left;
+}
+
+.food-picker-item:hover,
+.food-picker-item:active {
+  background: #1e1e1e;
+}
+
+.food-picker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.food-picker-info strong {
+  font-size: 14px;
+}
+
+.food-picker-info > span {
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.food-picker-calories {
+  flex-shrink: 0;
+  color: #b2e35e;
+  font-size: 12px;
+}
+
+.food-picker-calories span {
+  margin-left: 4px;
+  font-size: 16px;
+}
+
+.food-log-section {
+  margin-top: 18px;
+}
+
+.food-log-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.food-log-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.food-log-header > span {
+  color: #b2e35e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.food-list {
+  margin-bottom: 18px;
+}
+
+.food-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.food-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.food-row-info strong {
+  font-size: 14px;
+}
+
+.food-row-info .muted,
+.food-row-info .kcal-tag {
+  font-size: 12px;
+}
+
+.food-row > button {
+  flex-shrink: 0;
+}
+
+.logged-food-list .food-row {
+  background: #101010;
+}
+
+.foods-empty {
+  text-align: center;
+}
+
+.food-custom-sheet {
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 24px;
+  padding: 20px 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.food-custom-sheet .exercise-sheet-header h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.food-serving-note {
+  margin: -2px 0 14px;
+  font-size: 13px;
+}
+
+.food-calorie-preview {
+  margin: 12px 0 0;
+  color: #b2e35e;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.food-custom-sheet label {
+  display: block;
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 12px 0 6px;
+}
+
+.food-custom-sheet input {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2e2e2e;
+  color: #f4f4f5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.food-custom-sheet button[type="submit"] {
+  width: 100%;
+  margin-top: 16px;
+}
+
 /* --- Exercise picker --- */
 
 .exercise-trigger {

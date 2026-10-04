@@ -1,5 +1,27 @@
 const ITEMS = [
   {
+    key: 'foods',
+    label: 'Foods',
+    icon: (
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 3v7a3 3 0 0 0 6 0V3" />
+        <path d="M7 3v18" />
+        <path d="M17 3c-2 2-3 5-3 9h6c0-4-1-7-3-9Z" />
+        <path d="M17 12v9" />
+      </svg>
+    ),
+  },
+  {
     key: 'workout',
     label: 'Workout',
     icon: (

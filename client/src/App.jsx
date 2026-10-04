@@ -22,6 +22,14 @@ import SessionDetailView from './views/SessionDetailView.jsx'
 import WorkoutsView from './views/WorkoutsView.jsx'
 import WorkoutDetailView from './views/WorkoutDetailView.jsx'
 import WeightView from './views/WeightView.jsx'
+import FoodsView from './views/FoodsView.jsx'
+import {
+  addCustomFood,
+  deleteFoodLog,
+  listCustomFoods,
+  listFoodLogs,
+  logFood,
+} from './foodLog.js'
 
 const DEFAULT_BODY_WEIGHT = 70
 const DEFAULT_LOG_DURATION = 45
@@ -30,12 +38,14 @@ const newestFirst = (a, b) => b.date.localeCompare(a.date)
 const oldestFirst = (a, b) => a.recordedAt.localeCompare(b.recordedAt)
 
 export default function App() {
-  // workout | sessionDetail | workouts | workoutDetail | weight
+  // workout | sessionDetail | workouts | workoutDetail | weight | foods
   const [view, setView] = useState('workout')
   const [status, setStatus] = useState('loading') // loading | ready | error
   const [sessions, setSessions] = useState([])
   const [weights, setWeights] = useState([])
   const [workouts, setWorkouts] = useState([])
+  const [customFoods, setCustomFoods] = useState(() => listCustomFoods())
+  const [foodLogs, setFoodLogs] = useState(() => listFoodLogs())
   const [error, setError] = useState(null)
   const [slow, setSlow] = useState(false)
   const [openSessionId, setOpenSessionId] = useState(null)
@@ -288,6 +298,35 @@ export default function App() {
     }
   }
 
+  function handleAddCustomFood(input) {
+    try {
+      const created = addCustomFood(input)
+      setCustomFoods((current) => [...current, created])
+      return true
+    } catch (caught) {
+      setError(caught)
+      return false
+    }
+  }
+
+  function handleLogFood(food, date, quantity) {
+    try {
+      const created = logFood(food, date, quantity)
+      setFoodLogs((current) => [...current, created])
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  function handleDeleteFoodLog(id) {
+    try {
+      deleteFoodLog(id)
+      setFoodLogs((current) => current.filter((entry) => entry.id !== id))
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
   return (
     <div className="page">
       <header>
@@ -313,6 +352,7 @@ export default function App() {
           date={activeDate}
           today={today}
           bodyWeight={bodyWeight}
+          foodLogs={foodLogs}
           onDateChange={handleDateChange}
           onOpenSession={(id) => {
             setOpenSessionId(id)
@@ -363,7 +403,23 @@ export default function App() {
         <WeightView weights={weights} onAdd={handleAddWeight} onDelete={handleDeleteWeight} />
       )}
 
-      <BottomNav active={view === 'weight' ? 'weight' : 'workout'} onChange={setView} />
+      {status === 'ready' && view === 'foods' && (
+        <FoodsView
+          date={activeDate}
+          today={today}
+          customFoods={customFoods}
+          foodLogs={foodLogs.filter((entry) => entry.date === activeDate)}
+          onDateChange={handleDateChange}
+          onAddCustomFood={handleAddCustomFood}
+          onLogFood={handleLogFood}
+          onDeleteFoodLog={handleDeleteFoodLog}
+        />
+      )}
+
+      <BottomNav
+        active={view === 'weight' || view === 'foods' ? view : 'workout'}
+        onChange={setView}
+      />
     </div>
   )
 }
