@@ -390,7 +390,7 @@ select:focus-visible {
 
 .calorie-secondary-box {
   border-radius: 9px;
-  text-align: left;
+  text-align: center;
 }
 
 .goal-input {
@@ -398,7 +398,7 @@ select:focus-visible {
   border-bottom-color: #3b3b35;
   border-radius: 0;
   padding-left: 0;
-  text-align: left;
+  text-align: center;
 }
 
 .week-summary {

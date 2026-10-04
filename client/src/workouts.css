@@ -188,7 +188,7 @@
 .button-row button {
   min-height: 45px;
   padding: 11px 13px;
-  text-align: left;
+  text-align: center;
 }
 
 .button-row .btn-outline {
