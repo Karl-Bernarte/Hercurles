@@ -71,10 +71,6 @@ export default function WorkoutView({
           <div className="calorie-hero-unit">kcal</div>
         </div>
       </div>
-      <p className="hint">
-        Goal + calories burned − food logged {isToday ? 'today' : 'on this day'} = left to eat.
-      </p>
-
       <div className="week-summary">
         <span>This week</span>
         <span>
