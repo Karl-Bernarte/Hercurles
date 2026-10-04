@@ -19,6 +19,9 @@ One sentence: Hercurles is a workout logging app for lifters who want to track s
 - Mark a session complete
 - Browse past sessions, newest first
 - Delete a session or an individual set
+- Log daily food from a starter list or save custom foods with their serving size and calories
+
+Food entries and custom foods are saved in this browser's local storage.
 
 ## Built with
 

@@ -14,6 +14,7 @@ export default function WorkoutView({
   onOpenSession,
   onOpenWorkouts,
   onLogExercise,
+  foodLogs,
 }) {
   const [goal, setGoal] = useState(() => getCalorieGoal())
 
@@ -23,7 +24,10 @@ export default function WorkoutView({
     (sum, session) => sum + calculateCalories(session.sets, bodyWeight, session.durationMinutes),
     0
   )
-  const caloriesLeft = goal + dayCalories
+  const dayFoodCalories = foodLogs
+    .filter((entry) => entry.date === date)
+    .reduce((sum, entry) => sum + entry.calories, 0)
+  const caloriesLeft = goal + dayCalories - dayFoodCalories
 
   const weekStart = shiftDate(today, -6)
   const weekSessions = sessions.filter((session) => session.date >= weekStart && session.date <= today)
@@ -67,7 +71,9 @@ export default function WorkoutView({
           <div className="calorie-hero-unit">kcal</div>
         </div>
       </div>
-      <p className="hint">Goal + what you burned {isToday ? 'today' : 'on this day'} = left to eat.</p>
+      <p className="hint">
+        Goal + calories burned − food logged {isToday ? 'today' : 'on this day'} = left to eat.
+      </p>
 
       <div className="week-summary">
         <span>This week</span>

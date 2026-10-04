@@ -15,13 +15,22 @@ import {
   addExercise,
   deleteExercise,
 } from './api'
-import { todayLocal, formatDay } from './dateUtils.js'
+import { todayLocal } from './dateUtils.js'
 import BottomNav from './components/BottomNav.jsx'
 import WorkoutView from './views/WorkoutView.jsx'
 import SessionDetailView from './views/SessionDetailView.jsx'
 import WorkoutsView from './views/WorkoutsView.jsx'
 import WorkoutDetailView from './views/WorkoutDetailView.jsx'
 import WeightView from './views/WeightView.jsx'
+import FoodsView from './views/FoodsView.jsx'
+import {
+  addCustomFood,
+  deleteCustomFood,
+  deleteFoodLog,
+  listCustomFoods,
+  listFoodLogs,
+  logFood,
+} from './foodLog.js'
 
 const DEFAULT_BODY_WEIGHT = 70
 const DEFAULT_LOG_DURATION = 45
@@ -30,12 +39,14 @@ const newestFirst = (a, b) => b.date.localeCompare(a.date)
 const oldestFirst = (a, b) => a.recordedAt.localeCompare(b.recordedAt)
 
 export default function App() {
-  // workout | sessionDetail | workouts | workoutDetail | weight
+  // workout | sessionDetail | workouts | workoutDetail | weight | foods
   const [view, setView] = useState('workout')
   const [status, setStatus] = useState('loading') // loading | ready | error
   const [sessions, setSessions] = useState([])
   const [weights, setWeights] = useState([])
   const [workouts, setWorkouts] = useState([])
+  const [customFoods, setCustomFoods] = useState(() => listCustomFoods())
+  const [foodLogs, setFoodLogs] = useState(() => listFoodLogs())
   const [error, setError] = useState(null)
   const [slow, setSlow] = useState(false)
   const [openSessionId, setOpenSessionId] = useState(null)
@@ -288,11 +299,49 @@ export default function App() {
     }
   }
 
+  function handleAddCustomFood(input) {
+    try {
+      const created = addCustomFood(input)
+      setCustomFoods((current) => [...current, created])
+      return true
+    } catch (caught) {
+      setError(caught)
+      return false
+    }
+  }
+
+  function handleDeleteCustomFood(id) {
+    if (!window.confirm('Delete this custom food? Existing food logs will be kept.')) return
+    try {
+      deleteCustomFood(id)
+      setCustomFoods((current) => current.filter((food) => String(food.id) !== String(id)))
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  function handleLogFood(food, date, quantity) {
+    try {
+      const created = logFood(food, date, quantity)
+      setFoodLogs((current) => [...current, created])
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
+  function handleDeleteFoodLog(id) {
+    try {
+      deleteFoodLog(id)
+      setFoodLogs((current) => current.filter((entry) => entry.id !== id))
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
   return (
     <div className="page">
       <header>
         <h1>Hercurles</h1>
-        <p className="lede">{formatDay(today)}</p>
       </header>
 
       {error && (
@@ -313,6 +362,7 @@ export default function App() {
           date={activeDate}
           today={today}
           bodyWeight={bodyWeight}
+          foodLogs={foodLogs}
           onDateChange={handleDateChange}
           onOpenSession={(id) => {
             setOpenSessionId(id)
@@ -363,7 +413,25 @@ export default function App() {
         <WeightView weights={weights} onAdd={handleAddWeight} onDelete={handleDeleteWeight} />
       )}
 
-      <BottomNav active={view === 'weight' ? 'weight' : 'workout'} onChange={setView} />
+      {status === 'ready' && view === 'foods' && (
+        <FoodsView
+          date={activeDate}
+          today={today}
+          customFoods={customFoods}
+          foodLogs={foodLogs.filter((entry) => entry.date === activeDate)}
+          allFoodLogs={foodLogs}
+          onDateChange={handleDateChange}
+          onAddCustomFood={handleAddCustomFood}
+          onDeleteCustomFood={handleDeleteCustomFood}
+          onLogFood={handleLogFood}
+          onDeleteFoodLog={handleDeleteFoodLog}
+        />
+      )}
+
+      <BottomNav
+        active={view === 'weight' || view === 'foods' ? view : 'workout'}
+        onChange={setView}
+      />
     </div>
   )
 }
