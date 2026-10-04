@@ -15,7 +15,7 @@ import {
   addExercise,
   deleteExercise,
 } from './api'
-import { todayLocal, formatDay } from './dateUtils.js'
+import { todayLocal } from './dateUtils.js'
 import BottomNav from './components/BottomNav.jsx'
 import WorkoutView from './views/WorkoutView.jsx'
 import SessionDetailView from './views/SessionDetailView.jsx'
@@ -342,7 +342,6 @@ export default function App() {
     <div className="page">
       <header>
         <h1>Hercurles</h1>
-        <p className="lede">{formatDay(today)}</p>
       </header>
 
       {error && (
