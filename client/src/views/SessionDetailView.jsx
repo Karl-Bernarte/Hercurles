@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { calculateCalories } from '../api/metTable.js'
 import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EMPTY_SET_FORM = { exercise: '', weight: '', sets: 3, reps: '' }
+const EMPTY_SET_FORM = { exercise: '', weight: '', sets: 3, reps: 10 }
 
 export default function SessionDetailView({
   session,

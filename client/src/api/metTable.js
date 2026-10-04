@@ -217,6 +217,16 @@ export function addCustomExercise(input) {
   return exercise
 }
 
+export function deleteCustomExercise(name) {
+  const exercises = listCustomExercises()
+  const remaining = exercises.filter((exercise) => exercise.name !== name)
+  if (remaining.length === exercises.length) {
+    throw new Error('Custom exercise was not found.')
+  }
+  localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(remaining))
+  return remaining
+}
+
 export const MET_TABLE = Object.fromEntries(
   EXERCISE_CATALOG.map((exercise) => [exercise.name, exercise.met])
 )

@@ -377,15 +377,10 @@
   flex: 1;
 }
 
-.food-custom-row {
+.food-modal-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.food-custom-row .food-picker-item {
-  flex: 1;
-  min-width: 0;
+  gap: 8px;
 }
 
 .food-delete-button {
@@ -655,6 +650,23 @@
   margin: 0 -6px;
 }
 
+.exercise-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exercise-custom-row .exercise-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.exercise-delete-button {
+  flex-shrink: 0;
+  color: #f87171;
+  border-color: #5c1e1e;
+}
+
 .exercise-custom-form {
   overflow-y: auto;
 }
@@ -686,7 +698,7 @@
   font-family: inherit;
 }
 
-.exercise-custom-form button[type="submit"] {
+.exercise-custom-form button[type="button"] {
   width: 100%;
   margin-top: 16px;
 }

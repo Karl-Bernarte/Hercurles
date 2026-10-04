@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import DayNav from '../components/DayNav.jsx'
-import { formatDay } from '../dateUtils.js'
 import { BUILT_IN_FOODS } from '../foodLog.js'
 
 export default function FoodsView({
@@ -68,16 +67,24 @@ export default function FoodsView({
     setQuantity('1')
   }
 
+  function handleDeleteSelectedCustomFood() {
+    if (onDeleteCustomFood(selectedFood.id)) {
+      setSelectedFood(null)
+    }
+  }
+
+  function selectFood(food) {
+    setSelectedFood(food)
+    setQuantity('1')
+  }
+
   function renderFoodButton(food) {
     return (
       <button
         key={food.id}
         type="button"
         className="food-picker-item"
-        onClick={() => {
-          setSelectedFood(food)
-          setQuantity('1')
-        }}
+        onClick={() => selectFood(food)}
       >
         <span className="food-picker-info">
           <strong>{food.name}</strong>
@@ -87,22 +94,6 @@ export default function FoodsView({
           {food.calories} kcal <span aria-hidden="true">+</span>
         </span>
       </button>
-    )
-  }
-
-  function renderCustomFood(food) {
-    return (
-      <div className="food-custom-row" key={food.id}>
-        {renderFoodButton(food)}
-        <button
-          type="button"
-          className="ghost food-delete-button"
-          aria-label={`Delete custom food ${food.name}`}
-          onClick={() => onDeleteCustomFood(food.id)}
-        >
-          Delete
-        </button>
-      </div>
     )
   }
 
@@ -139,8 +130,6 @@ export default function FoodsView({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
-            <p className="food-picker-date">Adding to {formatDay(date)}</p>
-
             <div className="food-picker-list">
               {tab === 'History' ? (
                 filteredRecentFoods.length === 0 ? (
@@ -174,7 +163,7 @@ export default function FoodsView({
               {customFoods.length === 0 ? (
                 <p className="muted exercise-empty">Your custom foods will appear here.</p>
               ) : (
-                customFoods.map(renderCustomFood)
+                customFoods.map(renderFoodButton)
               )}
             </div>
           </>
@@ -221,13 +210,24 @@ export default function FoodsView({
           <form className="food-custom-sheet" onSubmit={handleLogSelectedFood}>
             <div className="exercise-sheet-header">
               <h2>Log {selectedFood.name}</h2>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => setSelectedFood(null)}
-              >
-                Close
-              </button>
+              <div className="food-modal-actions">
+                {customFoods.some((food) => food.id === selectedFood.id) && (
+                  <button
+                    type="button"
+                    className="ghost food-delete-button"
+                    onClick={handleDeleteSelectedCustomFood}
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => setSelectedFood(null)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <p className="muted food-serving-note">
               One serving: {selectedFood.serving} · {selectedFood.calories} kcal

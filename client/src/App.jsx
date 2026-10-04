@@ -311,12 +311,14 @@ export default function App() {
   }
 
   function handleDeleteCustomFood(id) {
-    if (!window.confirm('Delete this custom food? Existing food logs will be kept.')) return
+    if (!window.confirm('Delete this custom food? Existing food logs will be kept.')) return false
     try {
       deleteCustomFood(id)
       setCustomFoods((current) => current.filter((food) => String(food.id) !== String(id)))
+      return true
     } catch (caught) {
       setError(caught)
+      return false
     }
   }
 

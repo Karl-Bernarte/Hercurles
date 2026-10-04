@@ -3,6 +3,7 @@ import {
   EXERCISE_CATALOG,
   CATEGORIES,
   addCustomExercise,
+  deleteCustomExercise,
   listCustomExercises,
 } from '../api/metTable.js'
 import { getRecentExercises, addRecentExercise } from '../exerciseHistory.js'
@@ -25,13 +26,25 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
     setFormError('')
   }
 
-  function handleAddCustomExercise(event) {
-    event.preventDefault()
+  function handleAddCustomExercise() {
     try {
       const exercise = addCustomExercise(form)
       setCustomExercises((current) => [...current, exercise])
       setForm({ name: '', met: '', category: CATEGORIES[0] })
-      handlePick(exercise.name)
+      setTab('Custom')
+      setQuery('')
+      setShowCustomForm(false)
+      setFormError('')
+    } catch (error) {
+      setFormError(error.message)
+    }
+  }
+
+  function handleDeleteCustomExercise(name) {
+    if (!window.confirm(`Delete custom exercise "${name}"? Existing workout logs will be kept.`)) return
+    try {
+      setCustomExercises(deleteCustomExercise(name))
+      setFormError('')
     } catch (error) {
       setFormError(error.message)
     }
@@ -75,11 +88,22 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
             </div>
 
             {showCustomForm ? (
-              <form className="exercise-custom-form" onSubmit={handleAddCustomExercise}>
+              <div
+                className="exercise-custom-form"
+                role="group"
+                aria-label="Add a custom exercise"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
+                    event.preventDefault()
+                    handleAddCustomExercise()
+                  }
+                }}
+              >
                 <p className="muted">Add an exercise with its MET estimate and category.</p>
                 <label htmlFor="custom-exercise-name">Name of the workout</label>
                 <input
                   id="custom-exercise-name"
+                  type="text"
                   maxLength="100"
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -110,8 +134,8 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
                   ))}
                 </select>
                 {formError && <p className="exercise-form-error" role="alert">{formError}</p>}
-                <button type="submit">Save custom exercise</button>
-              </form>
+                <button type="button" onClick={handleAddCustomExercise}>Save custom exercise</button>
+              </div>
             ) : (
               <>
                 <div className="segmented exercise-tabs">
@@ -159,6 +183,9 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
                 />
 
                 <div className="exercise-list">
+                  {tab === 'Custom' && formError && (
+                    <p className="exercise-form-error" role="alert">{formError}</p>
+                  )}
                   {items.length === 0 ? (
                     <p className="muted exercise-empty">
                       {tab === 'History'
@@ -169,10 +196,30 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
                     </p>
                   ) : (
                     items.map((name) => {
-                      const custom = customExercises.find((exercise) => exercise.name === name)
+                      if (tab === 'Custom') {
+                        return (
+                          <div key={name} className="exercise-custom-row">
+                            <button
+                              type="button"
+                              className="exercise-item"
+                              onClick={() => handlePick(name)}
+                            >
+                              {name}
+                            </button>
+                            <button
+                              type="button"
+                              className="ghost exercise-delete-button"
+                              aria-label={`Delete custom exercise ${name}`}
+                              onClick={() => handleDeleteCustomExercise(name)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )
+                      }
                       return (
                         <button key={name} type="button" className="exercise-item" onClick={() => handlePick(name)}>
-                          {custom ? `${name} · ${custom.met} MET · ${custom.category}` : name}
+                          {name}
                         </button>
                       )
                     })

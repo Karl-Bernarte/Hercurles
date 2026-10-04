@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 10 }
+const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 12 }
 
 export default function WorkoutDetailView({
   workout,
