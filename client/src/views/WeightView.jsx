@@ -27,6 +27,9 @@ export default function WeightView({ weights, onAdd, onDelete }) {
   const end = Date.now()
   const start = end - range.ms
   const inRange = weights.filter((entry) => new Date(entry.recordedAt).getTime() >= start)
+  const chartStart = inRange.length
+    ? Math.min(...inRange.map((entry) => new Date(entry.recordedAt).getTime()))
+    : start
   const latest = weights.length > 0 ? weights[weights.length - 1] : null
   const showTime = range.key === 'day'
 
@@ -71,7 +74,7 @@ export default function WeightView({ weights, onAdd, onDelete }) {
       </div>
 
       <div className="card">
-        <WeightChart entries={inRange} start={start} end={end} showTime={showTime} />
+        <WeightChart entries={inRange} start={chartStart} end={end} showTime={showTime} />
       </div>
 
       <form onSubmit={handleSubmit} className="card">
