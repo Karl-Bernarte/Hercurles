@@ -1,142 +1,118 @@
 # Hercurles
 
-One sentence: Hercurles is a workout logging app for lifters who want to track sets, reps and weight per session, and see how their training changes over time.
+Hercurles is a workout and nutrition tracker for lifters who want to plan training, log sessions, and follow their progress over time.
 
-**Live site:** https://karl-bernarte.github.io/Hercurles/
-**API:** (not deployed yet — running in demo mode)
-**Demo video:** (link, added in week 3)
+**Live app:** [karl-bernarte.github.io/Hercurles](https://karl-bernarte.github.io/Hercurles/)
 
-> **This deployment is running in demo mode.** The interface is real; the backend
-> is simulated in your browser so the site works without a server. See
-> [Demo mode](#demo-mode) below. Delete this quote once your API is live.
+The client is deployed to GitHub Pages. Demo mode is enabled by default: workout, weight, and workout-plan data are stored in your browser, so they are not shared or synced between devices. Food logs and custom foods are also stored locally in the browser.
 
-![A screenshot of the main screen](docs/assets/screenshot.png)
+## Features
 
-## What it does
+- Create reusable workout plans with strength and cardio exercises, then log a plan as a session
+- Log individual exercises, sets, reps, weight, and cardio duration
+- Track sessions by date, review past workouts, delete sessions or sets, and mark sessions complete
+- See estimated calories burned using exercise MET values and your latest recorded body weight
+- Log meals from a food list or create custom foods with serving sizes and calories
+- Set a daily calorie goal and track food logged against it
+- Record body weight and view progress over day, week, month, and year ranges
 
-- Log a workout session with a date, duration and optional notes
-- Add sets to a session (exercise, weight, reps) and see total training volume update live
-- Mark a session complete
-- Browse past sessions, newest first
-- Delete a session or an individual set
-- Log daily food from a starter list or save custom foods with their serving size and calories
-
-Food entries and custom foods are saved in this browser's local storage.
+Calorie burn is an estimate, not a medical or nutrition measurement.
 
 ## Built with
 
-React and Vite on the front end, Express and PostgreSQL on the back end. The client is on GitHub Pages, the API on (host, TBD), the database on (host, TBD).
+- **Client:** React and Vite
+- **API:** Node.js and Express
+- **Database:** PostgreSQL
+- **Deployment:** GitHub Pages for the client; the API and database run separately
 
-## Demo mode
+The client uses one API interface with two implementations: a local-storage mock API for demo mode and an HTTP client for the Express API. Food logging is currently browser-local in either mode.
 
-This repository can run two ways, chosen by one environment variable at **build** time.
+## Run locally
 
-**Demo mode is the default.** Only the exact string `false` turns it off, so a forgotten or mistyped variable leaves you on the simulated backend with a visible notice rather than on a silently broken build.
+### Client in demo mode
 
-| `VITE_USE_MOCK_API` | What happens |
-| --- | --- |
-| unset, or `true` | The client answers its own requests from `localStorage`. No server, no database, nothing shared between visitors. This is what the template ships with, so the GitHub Pages link works on day one. |
-| `false` | The client calls the Express API at `VITE_API_BASE_URL`, which reads and writes real PostgreSQL. |
+Requires Node.js and npm. No API or database is needed.
 
-**Demo mode is a starting point and a fallback, not a finished project.** My finals submission will be all three pieces deployed and talking to each other. Demo mode is there so I can build the interface in week one before the API exists.
+```powershell
+cd client
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
 
-GitHub Pages serves files and cannot run Node, so the API and the database can never live there. They go somewhere else:
+Open [http://localhost:5173](http://localhost:5173).
 
-| Piece | Options |
-| --- | --- |
-| **API** | Render, Railway, Fly.io, Koyeb, or a VPS |
-| **Database** | Neon, Supabase, Railway, or Aiven |
+### Full stack
 
-## Running it yourself
+Requires Node.js 20 or newer, npm, and PostgreSQL.
 
-**The client only, in demo mode.** No database needed.
+1. Start PostgreSQL locally or use a hosted database.
+2. Configure the API environment and start it:
 
-    cd client
-    npm install
-    cp .env.example .env        # VITE_USE_MOCK_API stays true
-    npm run dev                 # http://localhost:5173
+   ```powershell
+   cd server
+   npm install
+   Copy-Item .env.example .env
+   # Set DATABASE_URL and CORS_ORIGINS in .env.
+   npm run db:reset
+   npm run dev
+   ```
 
-**The whole stack.** Needs a PostgreSQL, either local or hosted.
+3. In a second terminal, configure and start the client:
 
-    # 1. the database
-    docker run --name my-pg -e POSTGRES_PASSWORD=devpassword \
-      -e POSTGRES_DB=hercurles -p 5432:5432 -d postgres:17
+   ```powershell
+   cd client
+   npm install
+   Copy-Item .env.example .env
+   # Set VITE_USE_MOCK_API=false and VITE_API_BASE_URL=http://localhost:3000 in .env.
+   npm run dev
+   ```
 
-    # 2. the API
-    cd server
-    npm install
-    cp .env.example .env        # check DATABASE_URL
-    npm run db:reset            # creates the tables and adds sample rows
-    npm run dev                 # http://localhost:3000
+Check that the API is responding:
 
-    # 3. the client, in another terminal
-    cd client
-    npm install
-    cp .env.example .env
-    # set VITE_USE_MOCK_API=false
-    npm run dev
+```text
+http://localhost:3000/healthz
+http://localhost:3000/readyz
+```
 
-Check the API on its own before you blame the client:
+## Demo mode and configuration
 
-    curl http://localhost:3000/healthz
-    curl http://localhost:3000/readyz
-    curl http://localhost:3000/api/sessions
+`VITE_USE_MOCK_API` is read at build time. Only the exact value `false` switches the client to the Express API; when unset or set to `true`, the client uses browser storage.
 
-## Environment variables
-
-None of these are committed. `.env.example` in each folder lists them with placeholder values.
-
-| Name | Where | What it is |
+| Variable | Used by | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | server | PostgreSQL connection string. Contains a password |
-| `CORS_ORIGINS` | server | comma-separated origins allowed to call the API |
-| `NODE_ENV` | server | `production` on your host |
-| `PORT` | server | **set by the host**, do not set it yourself |
-| `VITE_USE_MOCK_API` | client, at build time | only `false` turns demo mode off; unset means on |
-| `VITE_API_BASE_URL` | client, at build time | your API's public URL, no trailing slash |
+| `DATABASE_URL` | API | PostgreSQL connection string |
+| `CORS_ORIGINS` | API | Comma-separated list of allowed client origins |
+| `NODE_ENV` | API | Set to `production` when deployed |
+| `PORT` | API | Listening port; deployment hosts usually set this |
+| `VITE_USE_MOCK_API` | Client build | Set to `false` to use the real API |
+| `VITE_API_BASE_URL` | Client build | Public base URL of the Express API |
 
-Every `VITE_` value is compiled into the built JavaScript and is **public**. Never put a key, a password or a connection string in one.
+The server and client each provide an `.env.example`. Do not commit `.env` files. Every `VITE_` value is included in the public client bundle; never put passwords, API keys, or database credentials in a `VITE_` variable.
 
-## Deploying
+## Deployment
 
-**Client, to GitHub Pages.** Already wired up in `.github/workflows/deploy-pages.yml`.
+The GitHub Actions workflow in `.github/workflows/deploy-pages.yml` builds and deploys the client to GitHub Pages when changes are pushed to `main`. To connect the deployed client to a hosted API, configure the repository Actions variables `VITE_USE_MOCK_API=false` and `VITE_API_BASE_URL` with the API's public URL, then trigger the Pages workflow manually or push a client change. Configure the API's `CORS_ORIGINS` to include the GitHub Pages origin.
 
-1. **Settings > Pages > Build and deployment > Source: GitHub Actions.**
-2. Nothing else, until the API is live. Demo mode is the default, so the first deploy works on its own.
-
-The repository must be **public** for Pages to serve it on a free account.
-
-**API and database.** Not automated yet — planned for week 2–3. Will point the host at the `server/` folder, set environment variables in its dashboard, and run `server/db/schema.sql` once against the hosted database.
+GitHub Pages serves the client only; it does not run the Express API or PostgreSQL. The API and database must be hosted separately.
 
 ## Project structure
 
-    client/          React front end, built by Vite
-      src/api/       ONE interface, two implementations, chosen by a variable
-      src/components/
-    server/          Express API
-      db/            pool, schema.sql, seed.sql, and a runner for them
-    docs/            planning documents and weekly reports
+```text
+client/       React application and Vite build
+  src/api/    Mock and HTTP API implementations
+  src/views/  Workout, session, food, and weight screens
+server/       Express API and PostgreSQL integration
+  db/         Schema, seed data, and database runner
+docs/         Project proposal, design, reports, and security notes
+```
 
-## Architecture
+## Project documents
 
-The React client (GitHub Pages) talks to an Express API (host TBD), which reads and writes a PostgreSQL database (host TBD). In demo mode, the client instead reads and writes `localStorage` directly, using the same `src/api/` interface so switching to the real API later is a one-line change.
-
-## What I would do next
-
-- Connect the real Express/PostgreSQL backend I already built and tested locally, adapting it into this template's `server/` structure and schema
-- Add the calorie-estimate feature (MET table × body weight × duration) from my original proposal, which isn't built yet
-- Add editing for existing sets (currently only add/delete)
+- [AI use](AI-USAGE.md)
+- [Project documents](docs/README.md)
+- [License](LICENSE)
 
 ## Author
 
-Karl Shane Y. Bernarte. CS-403, 6APSI.
-
-## AI use
-
-![Built with AI assistance](https://img.shields.io/badge/built%20with-AI%20assistance-0b5fff)
-
-Built with AI assistance, including Claude (Anthropic) and GitHub Copilot. See [AI-USAGE.md](AI-USAGE.md) for the account of how AI was used, what it got wrong, and the parts I wrote myself.
-
-## Licence
-
-MIT, see [LICENSE](LICENSE).
+Karl Shane Y. Bernarte · CS-403, 6APSI
