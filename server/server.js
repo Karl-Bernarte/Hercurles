@@ -20,6 +20,15 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
 app.use(cors({ origin: allowedOrigins }))
 app.use(express.json({ limit: '100kb' }))
 
+app.use((request, response, next) => {
+  console.log(`${request.method} ${request.originalUrl}`)
+  next()
+})
+
+app.get('/', (request, response) => {
+  response.json({ ok: true, service: 'hercurles-api' })
+})
+
 app.get('/healthz', (request, response) => {
   response.json({ ok: true })
 })
