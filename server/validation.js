@@ -6,10 +6,10 @@ const SESSION_FIELDS = new Set([
   'title',
   'complete',
 ])
-const SET_FIELDS = new Set(['exercise', 'weight', 'sets', 'reps'])
+const SET_FIELDS = new Set(['exercise', 'category', 'durationMinutes', 'weight', 'sets', 'reps'])
 const WEIGHT_FIELDS = new Set(['weightKg', 'recordedAt'])
 const WORKOUT_FIELDS = new Set(['name'])
-const EXERCISE_FIELDS = new Set(['name', 'weight', 'sets', 'reps'])
+const EXERCISE_FIELDS = new Set(['name', 'category', 'durationMinutes', 'weight', 'sets', 'reps'])
 
 function readObject(body, allowedFields) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -103,14 +103,25 @@ export function validateSession(body, { partial = false } = {}) {
 export function validateSet(body) {
   const result = readObject(body, SET_FIELDS)
   const { value } = result
-  const errors = [
-    ...result.errors,
-    ...readText(value.exercise, 'exercise', { max: 100 }),
-    ...readNumber(value.weight, 'weight', 0, 1000),
-    ...readNumber(value.sets, 'sets', 1, 20, { integer: true }),
-    ...readNumber(value.reps, 'reps', 1, 100, { integer: true }),
-  ]
-  return { errors, value: { ...value, exercise: typeof value.exercise === 'string' ? value.exercise.trim() : value.exercise } }
+  const category = value.category ?? 'Strength'
+  const errors = [...result.errors, ...readText(value.exercise, 'exercise', { max: 100 })]
+  if (!['Strength', 'Cardio'].includes(category)) errors.push('category must be Strength or Cardio')
+  if (category === 'Cardio') {
+    errors.push(...readNumber(value.durationMinutes, 'durationMinutes', 1, 600, { integer: true }))
+  } else {
+    errors.push(...readNumber(value.weight, 'weight', 0, 1000))
+    errors.push(...readNumber(value.sets, 'sets', 1, 20, { integer: true }))
+    errors.push(...readNumber(value.reps, 'reps', 1, 100, { integer: true }))
+  }
+  return {
+    errors,
+    value: {
+      ...value,
+      exercise: typeof value.exercise === 'string' ? value.exercise.trim() : value.exercise,
+      category,
+      ...(category === 'Cardio' ? { weight: 0, sets: 1, reps: 1 } : { durationMinutes: null }),
+    },
+  }
 }
 
 export function validateWeight(body) {
@@ -140,15 +151,23 @@ export function validateWorkout(body) {
 export function validateExercise(body) {
   const result = readObject(body, EXERCISE_FIELDS)
   const { value } = result
-  const errors = [
-    ...result.errors,
-    ...readText(value.name, 'name', { max: 100 }),
-    ...readNumber(value.weight, 'weight', 0, 1000),
-    ...readNumber(value.sets, 'sets', 1, 20, { integer: true }),
-    ...readNumber(value.reps, 'reps', 1, 100, { integer: true }),
-  ]
+  const category = value.category ?? 'Strength'
+  const errors = [...result.errors, ...readText(value.name, 'name', { max: 100 })]
+  if (!['Strength', 'Cardio'].includes(category)) errors.push('category must be Strength or Cardio')
+  if (category === 'Cardio') {
+    errors.push(...readNumber(value.durationMinutes, 'durationMinutes', 1, 600, { integer: true }))
+  } else {
+    errors.push(...readNumber(value.weight, 'weight', 0, 1000))
+    errors.push(...readNumber(value.sets, 'sets', 1, 20, { integer: true }))
+    errors.push(...readNumber(value.reps, 'reps', 1, 100, { integer: true }))
+  }
   return {
     errors,
-    value: { ...value, name: typeof value.name === 'string' ? value.name.trim() : value.name },
+    value: {
+      ...value,
+      name: typeof value.name === 'string' ? value.name.trim() : value.name,
+      category,
+      ...(category === 'Cardio' ? { weight: 0, sets: 1, reps: 1 } : { durationMinutes: null }),
+    },
   }
 }

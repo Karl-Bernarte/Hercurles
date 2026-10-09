@@ -100,7 +100,16 @@ export async function addSet(sessionId, input) {
   const rows = readSessions()
   const session = rows.find((row) => String(row.id) === String(sessionId))
   if (!session) throw new Error('Not found')
-  const set = { ...input, id: crypto.randomUUID() }
+  const cardio = input.category === 'Cardio'
+  const set = {
+    ...input,
+    weight: cardio ? 0 : Number(input.weight) || 0,
+    sets: cardio ? 1 : Number(input.sets),
+    reps: cardio ? 1 : Number(input.reps),
+    category: cardio ? 'Cardio' : 'Strength',
+    durationMinutes: cardio ? Number(input.durationMinutes) : null,
+    id: crypto.randomUUID(),
+  }
   session.sets = [...session.sets, set]
   writeSessions(rows)
   return set
@@ -165,9 +174,11 @@ export async function addExercise(workoutId, input) {
   const exercise = {
     id: crypto.randomUUID(),
     name: input.name,
-    weight: Number(input.weight) || 0,
-    sets: Number(input.sets),
-    reps: Number(input.reps),
+    category: input.category === 'Cardio' ? 'Cardio' : 'Strength',
+    weight: input.category === 'Cardio' ? 0 : Number(input.weight) || 0,
+    sets: input.category === 'Cardio' ? 1 : Number(input.sets),
+    reps: input.category === 'Cardio' ? 1 : Number(input.reps),
+    durationMinutes: input.category === 'Cardio' ? Number(input.durationMinutes) : null,
   }
   workout.exercises = [...workout.exercises, exercise]
   writeWorkouts(rows)

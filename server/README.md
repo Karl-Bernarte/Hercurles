@@ -8,6 +8,8 @@ weigh-ins in PostgreSQL. It serves the data contract used by `client/src/api`.
 1. Install Node.js 20 or newer and PostgreSQL.
 2. Create a database, then copy `.env.example` to `.env` and set `DATABASE_URL`.
 3. From this directory, run `npm ci`, `npm run db:reset`, and `npm run dev`.
+   For an existing database, use `npm run db:migrate:cardio` to add cardio
+   categories and per-activity durations without resetting existing data.
 4. Check `http://localhost:3000/readyz`; it returns `{"ok":true,"db":"up"}` when
    the database connection works.
 
@@ -43,9 +45,12 @@ deletes return `204` with no body.
 | `DELETE` | `/api/workouts/:workoutId/exercises/:exerciseId` | Delete a plan exercise |
 
 Create a session with `date` (`YYYY-MM-DD`) and `durationMinutes`; `notes`,
-`workoutId`, and `title` are optional. Sets use `exercise`, `weight`, `sets`,
-and `reps`. Weigh-ins use `weightKg` and an ISO `recordedAt` timestamp. Workout
-plans use `name`; their exercises use `name`, `weight`, `sets`, and `reps`.
+`workoutId`, and `title` are optional. Strength sets use `exercise`, `weight`,
+`sets`, and `reps`; cardio entries use `exercise`, `category: "Cardio"`, and
+`durationMinutes`. Weigh-ins use `weightKg` and an ISO `recordedAt` timestamp.
+Workout plans use `name`; strength exercises use `name`, `weight`, `sets`, and
+`reps`, while cardio exercises use `name`, `category: "Cardio"`, and
+`durationMinutes`.
 
 Set `CORS_ORIGINS` to a comma-separated list of exact frontend origins when
 deploying (for example, `https://example.github.io`). The database URL must be

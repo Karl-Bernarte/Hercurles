@@ -2,6 +2,11 @@ import { calculateCalories } from '../api/metTable.js'
 
 export default function SessionCard({ session, bodyWeight, onOpen }) {
   const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
+  const strengthEntries = session.sets.filter((set) => set.category !== 'Cardio').length
+  const cardioMinutes = session.sets.reduce(
+    (sum, set) => sum + (Number(set.durationMinutes) || 0),
+    0
+  )
 
   return (
     <li>
@@ -11,7 +16,8 @@ export default function SessionCard({ session, bodyWeight, onOpen }) {
             {session.title || 'Workout'} {session.complete && <span className="badge">DONE</span>}
           </span>
           <span className="muted session-row-sub">
-            {session.sets.length} set{session.sets.length === 1 ? '' : 's'}
+            {strengthEntries} set{strengthEntries === 1 ? '' : 's'}
+            {cardioMinutes ? ` · ${cardioMinutes} min cardio` : ''}
             {session.notes ? ` · ${session.notes}` : ''}
           </span>
         </span>

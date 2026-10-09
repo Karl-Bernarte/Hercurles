@@ -58,8 +58,17 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
       : [...EXERCISE_CATALOG, ...customExercises]
           .filter((exercise) => exercise.category === tab)
           .map((exercise) => exercise.name)
+  items = [...new Set(items)]
   if (lowerQuery) {
-    items = items.filter((name) => name.toLowerCase().includes(lowerQuery))
+    const queryWords = lowerQuery.match(/[a-z0-9]+/g) ?? []
+    const normalizeWord = (word) => word.endsWith('s') ? word.slice(0, -1) : word
+    const normalizedQuery = queryWords.map(normalizeWord)
+    items = items.filter((name) => {
+      const nameWords = (name.toLowerCase().match(/[a-z0-9]+/g) ?? []).map(normalizeWord)
+      return normalizedQuery.every((queryWord) =>
+        nameWords.some((nameWord) => nameWord.includes(queryWord))
+      )
+    })
   }
 
   return (
@@ -195,10 +204,10 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
                           : 'No matches.'}
                     </p>
                   ) : (
-                    items.map((name) => {
+                    items.map((name, index) => {
                       if (tab === 'Custom') {
                         return (
-                          <div key={name} className="exercise-custom-row">
+                          <div key={`${name}-${index}`} className="exercise-custom-row">
                             <button
                               type="button"
                               className="exercise-item"
@@ -218,7 +227,7 @@ export default function ExercisePicker({ value, onSelect, label = 'Exercise' }) 
                         )
                       }
                       return (
-                        <button key={name} type="button" className="exercise-item" onClick={() => handlePick(name)}>
+                        <button key={`${name}-${index}`} type="button" className="exercise-item" onClick={() => handlePick(name)}>
                           {name}
                         </button>
                       )

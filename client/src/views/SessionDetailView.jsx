@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { calculateCalories } from '../api/metTable.js'
+import { calculateCalories, getExerciseCategory } from '../api/metTable.js'
 import ExercisePicker from '../components/ExercisePicker.jsx'
 
-const EMPTY_SET_FORM = { exercise: '', weight: '', sets: 3, reps: 10 }
+const EMPTY_SET_FORM = { exercise: '', weight: '', sets: 3, reps: 10, durationMinutes: '' }
 
 export default function SessionDetailView({
   session,
@@ -14,18 +14,27 @@ export default function SessionDetailView({
   onDeleteSet,
 }) {
   const [form, setForm] = useState(EMPTY_SET_FORM)
+  const isCardio = getExerciseCategory(form.exercise) === 'Cardio'
 
   const kcal = calculateCalories(session.sets, bodyWeight, session.durationMinutes)
-  const totalSets = session.sets.reduce((sum, set) => sum + (Number(set.sets) || 1), 0)
+  const totalSets = session.sets.reduce(
+    (sum, set) => sum + (set.category === 'Cardio' ? 0 : (Number(set.sets) || 1)),
+    0
+  )
 
   async function handleSubmit(event) {
     event.preventDefault()
     if (!form.exercise.trim()) return
     const saved = await onAddSet(session.id, {
       exercise: form.exercise.trim(),
-      weight: Number(form.weight) || 0,
-      sets: Number(form.sets) || 1,
-      reps: Number(form.reps),
+      category: isCardio ? 'Cardio' : 'Strength',
+      ...(isCardio
+        ? { durationMinutes: Number(form.durationMinutes) }
+        : {
+            weight: Number(form.weight) || 0,
+            sets: Number(form.sets) || 1,
+            reps: Number(form.reps),
+          }),
     })
     if (saved) setForm(EMPTY_SET_FORM)
   }
@@ -38,7 +47,8 @@ export default function SessionDetailView({
 
       <div className="row-head">
         <h2 className="detail-title">
-          {session.title || 'Workout'} {session.complete && <span className="badge">DONE</span>}
+          {session.title || (session.isDraft ? 'Log exercise' : 'Workout')}{' '}
+          {session.complete && <span className="badge">DONE</span>}
         </h2>
         <span className="kcal-tag">{kcal} kcal</span>
       </div>
@@ -56,7 +66,9 @@ export default function SessionDetailView({
               <span>
                 {index + 1}. {set.exercise}{' '}
                 <span className="muted">
-                  · {set.weight} kg · {set.sets ?? 1} sets × {set.reps} reps
+                  {set.category === 'Cardio'
+                    ? `· ${set.durationMinutes} min`
+                    : `· ${set.weight} kg · ${set.sets ?? 1} sets × ${set.reps} reps`}
                 </span>
               </span>
               <button type="button" className="ghost" onClick={() => onDeleteSet(session.id, set.id)}>
@@ -72,51 +84,74 @@ export default function SessionDetailView({
 
         <ExercisePicker value={form.exercise} onSelect={(name) => setForm({ ...form, exercise: name })} />
 
-        <label htmlFor="set-weight">Weight (kg)</label>
-        <input
-          id="set-weight"
-          type="number"
-          value={form.weight}
-          onChange={(event) => setForm({ ...form, weight: event.target.value })}
-          required
-        />
-
-        <div className="row-inputs">
-          <div>
-            <label htmlFor="set-sets">Sets</label>
+        {isCardio ? (
+          <>
+            <label htmlFor="set-duration">Duration (minutes)</label>
             <input
-              id="set-sets"
+              id="set-duration"
               type="number"
               min="1"
-              max="20"
-              value={form.sets}
-              onChange={(event) => setForm({ ...form, sets: event.target.value })}
+              max="600"
+              value={form.durationMinutes}
+              onChange={(event) => setForm({ ...form, durationMinutes: event.target.value })}
               required
             />
-          </div>
-          <div>
-            <label htmlFor="set-reps">Reps</label>
+          </>
+        ) : (
+          <>
+            <label htmlFor="set-weight">Weight (kg)</label>
             <input
-              id="set-reps"
+              id="set-weight"
               type="number"
-              value={form.reps}
-              onChange={(event) => setForm({ ...form, reps: event.target.value })}
+              min="0"
+              step="0.5"
+              value={form.weight}
+              onChange={(event) => setForm({ ...form, weight: event.target.value })}
               required
             />
-          </div>
-        </div>
+
+            <div className="row-inputs">
+              <div>
+                <label htmlFor="set-sets">Sets</label>
+                <input
+                  id="set-sets"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={form.sets}
+                  onChange={(event) => setForm({ ...form, sets: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="set-reps">Reps</label>
+                <input
+                  id="set-reps"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={form.reps}
+                  onChange={(event) => setForm({ ...form, reps: event.target.value })}
+                  required
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         <button type="submit">+ Log exercise</button>
       </form>
 
-      {!session.complete && (
+      {!session.isDraft && !session.complete && (
         <button type="button" className="btn-block" onClick={() => onMarkComplete(session.id)}>
           Mark complete
         </button>
       )}
-      <button type="button" className="ghost btn-block danger-outline" onClick={() => onDelete(session.id)}>
-        Delete workout log
-      </button>
+      {!session.isDraft && (
+        <button type="button" className="ghost btn-block danger-outline" onClick={() => onDelete(session.id)}>
+          Delete workout log
+        </button>
+      )}
     </>
   )
 }

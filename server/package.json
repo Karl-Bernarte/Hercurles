@@ -8,6 +8,7 @@
     "dev": "node --env-file=.env --watch server.js",
     "db:schema": "node --env-file=.env db/run.js db/schema.sql",
     "db:seed": "node --env-file=.env db/run.js db/seed.sql",
+    "db:migrate:cardio": "node --env-file=.env db/run.js db/migrations/20261009_cardio_duration.sql",
     "db:reset": "npm run db:schema && npm run db:seed",
     "test": "node --test"
   },

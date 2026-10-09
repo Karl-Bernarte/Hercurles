@@ -12,6 +12,8 @@ const SET_COLUMNS = `
   id,
   session_id AS "sessionId",
   exercise,
+  category,
+  duration_minutes AS "durationMinutes",
   weight::float8 AS weight,
   sets,
   reps
@@ -22,6 +24,8 @@ const EXERCISE_COLUMNS = `
   id,
   workout_id AS "workoutId",
   name,
+  category,
+  duration_minutes AS "durationMinutes",
   weight::float8 AS weight,
   sets,
   reps
@@ -108,11 +112,11 @@ export async function deleteSession(pool, id) {
 
 export async function addSet(pool, sessionId, input) {
   const result = await pool.query(
-    `INSERT INTO session_sets (session_id, exercise, weight, sets, reps)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, session_id AS "sessionId", exercise,
-       weight::float8 AS weight, sets, reps`,
-    [sessionId, input.exercise, input.weight, input.sets, input.reps]
+    `INSERT INTO session_sets (session_id, exercise, category, duration_minutes, weight, sets, reps)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, session_id AS "sessionId", exercise, category,
+       duration_minutes AS "durationMinutes", weight::float8 AS weight, sets, reps`,
+    [sessionId, input.exercise, input.category, input.durationMinutes, input.weight, input.sets, input.reps]
   )
   return result.rows[0]
 }
@@ -194,11 +198,12 @@ export async function deleteWorkout(pool, id) {
 
 export async function addExercise(pool, workoutId, input) {
   const result = await pool.query(
-    `INSERT INTO exercises (workout_id, name, weight, sets, reps)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO exercises (workout_id, name, category, duration_minutes, weight, sets, reps)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id, workout_id AS "workoutId", name,
+       category, duration_minutes AS "durationMinutes",
        weight::float8 AS weight, sets, reps`,
-    [workoutId, input.name, input.weight, input.sets, input.reps]
+    [workoutId, input.name, input.category, input.durationMinutes, input.weight, input.sets, input.reps]
   )
   return result.rows[0]
 }

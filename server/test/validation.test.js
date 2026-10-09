@@ -57,6 +57,23 @@ test('set validation checks numeric ranges and trims exercise names', () => {
   assert.deepEqual(validateSet({ exercise: 'Squat', weight: -1, sets: 0, reps: 101 }).errors.length, 3)
 })
 
+test('cardio set validation accepts duration minutes without weight, sets, or reps', () => {
+  const result = validateSet({
+    exercise: 'Running',
+    category: 'Cardio',
+    durationMinutes: 30,
+  })
+  assert.deepEqual(result.errors, [])
+  assert.equal(result.value.category, 'Cardio')
+  assert.equal(result.value.durationMinutes, 30)
+  assert.equal(result.value.sets, 1)
+  assert.equal(result.value.reps, 1)
+  assert.deepEqual(
+    validateSet({ exercise: 'Running', category: 'Cardio', durationMinutes: 0 }).errors,
+    ['durationMinutes must be a whole number from 1 to 600']
+  )
+})
+
 test('weight validation accepts ISO timestamps and rejects malformed input', () => {
   assert.deepEqual(
     validateWeight({ weightKg: 72.5, recordedAt: '2026-10-09T00:00:00.000Z' }).errors,
@@ -79,6 +96,18 @@ test('workout and exercise validation enforces client limits', () => {
     validateExercise({ name: 'Row', weight: 70, sets: 4, reps: 8 }).errors,
     []
   )
+})
+
+test('cardio workout exercises use their duration instead of weight and reps', () => {
+  const result = validateExercise({
+    name: 'Running',
+    category: 'Cardio',
+    durationMinutes: 25,
+  })
+  assert.deepEqual(result.errors, [])
+  assert.equal(result.value.category, 'Cardio')
+  assert.equal(result.value.durationMinutes, 25)
+  assert.equal(result.value.weight, 0)
 })
 
 test('path identifiers must be positive safe integers', () => {

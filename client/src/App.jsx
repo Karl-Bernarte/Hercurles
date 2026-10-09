@@ -51,6 +51,7 @@ export default function App() {
   const [slow, setSlow] = useState(false)
   const [openSessionId, setOpenSessionId] = useState(null)
   const [openWorkoutId, setOpenWorkoutId] = useState(null)
+  const [draftSession, setDraftSession] = useState(null)
 
   const [today, setToday] = useState(todayLocal())
   const [pickedDate, setPickedDate] = useState(null)
@@ -91,7 +92,8 @@ export default function App() {
   const bodyWeight =
     weights.length > 0 ? weights[weights.length - 1].weightKg : DEFAULT_BODY_WEIGHT
 
-  const openSession = sessions.find((session) => session.id === openSessionId)
+  const openSession =
+    openSessionId === 'draft' ? draftSession : sessions.find((session) => session.id === openSessionId)
   const openWorkout = workouts.find((workout) => workout.id === openWorkoutId)
 
   function handleDateChange(value) {
@@ -115,10 +117,19 @@ export default function App() {
       return
     }
 
+    const cardioMinutes = workout.exercises.reduce(
+      (total, exercise) =>
+        total + (exercise.category === 'Cardio' ? Number(exercise.durationMinutes) || 0 : 0),
+      0
+    )
+    const hasStrength = workout.exercises.some((exercise) => exercise.category !== 'Cardio')
+
     try {
       const created = await createSession({
         date: activeDate,
-        durationMinutes: DEFAULT_LOG_DURATION,
+        durationMinutes: hasStrength
+          ? DEFAULT_LOG_DURATION + cardioMinutes
+          : cardioMinutes || DEFAULT_LOG_DURATION,
         notes: '',
         workoutId: workout.id,
         title: workout.name,
@@ -127,9 +138,14 @@ export default function App() {
       for (const exercise of workout.exercises) {
         const set = await addSet(created.id, {
           exercise: exercise.name,
-          weight: exercise.weight ?? 0,
-          sets: exercise.sets ?? 1,
-          reps: exercise.reps,
+          category: exercise.category ?? 'Strength',
+          ...(exercise.category === 'Cardio'
+            ? { durationMinutes: exercise.durationMinutes }
+            : {
+                weight: exercise.weight ?? 0,
+                sets: exercise.sets ?? 1,
+                reps: exercise.reps,
+              }),
         })
         builtSets = [...builtSets, set]
       }
@@ -145,22 +161,20 @@ export default function App() {
   }
 
   // Quick path: no saved workout, just an empty session to log sets into by hand.
-  async function handleLogExercise() {
-    try {
-      const created = await createSession({
-        date: activeDate,
-        durationMinutes: DEFAULT_LOG_DURATION,
-        notes: '',
-        workoutId: null,
-        title: '',
-      })
-      setSessions((current) => [created, ...current].sort(newestFirst))
-      setPickedDate(created.date === today ? null : created.date)
-      setOpenSessionId(created.id)
-      setView('sessionDetail')
-    } catch (caught) {
-      setError(caught)
-    }
+  function handleLogExercise() {
+    setDraftSession({
+      id: 'draft',
+      date: activeDate,
+      durationMinutes: DEFAULT_LOG_DURATION,
+      notes: '',
+      workoutId: null,
+      title: '',
+      complete: false,
+      sets: [],
+      isDraft: true,
+    })
+    setOpenSessionId('draft')
+    setView('sessionDetail')
   }
 
   async function handleDeleteSession(id) {
@@ -186,15 +200,69 @@ export default function App() {
   }
 
   async function handleAddSet(sessionId, input) {
+    let createdSession
+    let createdSet
+    let updatedSession
     try {
-      const created = await addSet(sessionId, input)
+      if (sessionId === 'draft') {
+        createdSession = await createSession({
+          date: draftSession.date,
+          durationMinutes: input.category === 'Cardio'
+            ? input.durationMinutes
+            : DEFAULT_LOG_DURATION,
+          notes: '',
+          workoutId: null,
+          title: input.exercise,
+        })
+      }
+
+      const targetId = createdSession?.id ?? sessionId
+      createdSet = await addSet(targetId, input)
+      if (!createdSession) {
+        const session = sessions.find((row) => row.id === sessionId)
+        if (session) {
+          try {
+            updatedSession = await updateSession(sessionId, {
+              ...(!session.title ? { title: input.exercise } : {}),
+              ...(input.category === 'Cardio'
+                ? { durationMinutes: session.durationMinutes + input.durationMinutes }
+                : {}),
+            })
+          } catch (error) {
+            await deleteSet(sessionId, createdSet.id)
+            throw error
+          }
+        }
+      }
+
       setSessions((current) =>
-        current.map((session) =>
-          session.id === sessionId ? { ...session, sets: [...session.sets, created] } : session
-        )
+        createdSession
+          ? [...current, { ...createdSession, sets: [createdSet] }].sort(newestFirst)
+          : current.map((session) => {
+              if (session.id !== sessionId) return session
+              const base = updatedSession ?? session
+              return {
+                ...base,
+                title: base.title || input.exercise,
+                sets: [...base.sets, createdSet],
+              }
+            })
       )
+      if (createdSession) {
+        setPickedDate(createdSession.date === today ? null : createdSession.date)
+        setOpenSessionId(createdSession.id)
+        setDraftSession(null)
+      }
       return true
     } catch (caught) {
+      if (createdSession) {
+        try {
+          await deleteSession(createdSession.id)
+        } catch (cleanupError) {
+          setError(new Error(`${caught.message}; unable to remove the empty workout log: ${cleanupError.message}`))
+          return false
+        }
+      }
       setError(caught)
       return false
     }
@@ -379,7 +447,13 @@ export default function App() {
         <SessionDetailView
           session={openSession}
           bodyWeight={bodyWeight}
-          onBack={() => setView('workout')}
+          onBack={() => {
+            if (openSession.isDraft) {
+              setDraftSession(null)
+              setOpenSessionId(null)
+            }
+            setView('workout')
+          }}
           onMarkComplete={handleMarkComplete}
           onDelete={handleDeleteSession}
           onAddSet={handleAddSet}

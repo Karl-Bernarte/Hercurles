@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import ExercisePicker from '../components/ExercisePicker.jsx'
+import { getExerciseCategory } from '../api/metTable.js'
 
-const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 12 }
+const EMPTY_FORM = { name: '', weight: '', sets: 3, reps: 12, durationMinutes: '' }
 
 export default function WorkoutDetailView({
   workout,
@@ -12,15 +13,21 @@ export default function WorkoutDetailView({
   onLogWorkout,
 }) {
   const [form, setForm] = useState(EMPTY_FORM)
+  const isCardio = getExerciseCategory(form.name) === 'Cardio'
 
   async function handleSubmit(event) {
     event.preventDefault()
     if (!form.name.trim()) return
     const saved = await onAddExercise(workout.id, {
       name: form.name.trim(),
-      weight: Number(form.weight) || 0,
-      sets: Number(form.sets),
-      reps: Number(form.reps),
+      category: isCardio ? 'Cardio' : 'Strength',
+      ...(isCardio
+        ? { durationMinutes: Number(form.durationMinutes) }
+        : {
+            weight: Number(form.weight) || 0,
+            sets: Number(form.sets),
+            reps: Number(form.reps),
+          }),
     })
     if (saved) setForm(EMPTY_FORM)
   }
@@ -45,7 +52,9 @@ export default function WorkoutDetailView({
               <span>
                 {index + 1}. {exercise.name}{' '}
                 <span className="muted">
-                  · {exercise.weight ?? 0} kg · {exercise.sets} sets × {exercise.reps} reps
+                  {exercise.category === 'Cardio'
+                    ? `· ${exercise.durationMinutes} min`
+                    : `· ${exercise.weight ?? 0} kg · ${exercise.sets} sets × ${exercise.reps} reps`}
                 </span>
               </span>
               <button type="button" className="ghost" onClick={() => onDeleteExercise(workout.id, exercise.id)}>
@@ -61,43 +70,60 @@ export default function WorkoutDetailView({
 
         <ExercisePicker value={form.name} onSelect={(name) => setForm({ ...form, name })} />
 
-        <label htmlFor="exercise-weight">Weight (kg)</label>
-        <input
-          id="exercise-weight"
-          type="number"
-          min="0"
-          step="0.5"
-          value={form.weight}
-          onChange={(event) => setForm({ ...form, weight: event.target.value })}
-          required
-        />
+        {isCardio ? (
+          <>
+            <label htmlFor="exercise-duration">Duration (minutes)</label>
+            <input
+              id="exercise-duration"
+              type="number"
+              min="1"
+              max="600"
+              value={form.durationMinutes}
+              onChange={(event) => setForm({ ...form, durationMinutes: event.target.value })}
+              required
+            />
+          </>
+        ) : (
+          <>
+            <label htmlFor="exercise-weight">Weight (kg)</label>
+            <input
+              id="exercise-weight"
+              type="number"
+              min="0"
+              step="0.5"
+              value={form.weight}
+              onChange={(event) => setForm({ ...form, weight: event.target.value })}
+              required
+            />
 
-        <div className="row-inputs">
-          <div>
-            <label htmlFor="exercise-sets">Sets</label>
-            <input
-              id="exercise-sets"
-              type="number"
-              min="1"
-              max="20"
-              value={form.sets}
-              onChange={(event) => setForm({ ...form, sets: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="exercise-reps">Reps</label>
-            <input
-              id="exercise-reps"
-              type="number"
-              min="1"
-              max="100"
-              value={form.reps}
-              onChange={(event) => setForm({ ...form, reps: event.target.value })}
-              required
-            />
-          </div>
-        </div>
+            <div className="row-inputs">
+              <div>
+                <label htmlFor="exercise-sets">Sets</label>
+                <input
+                  id="exercise-sets"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={form.sets}
+                  onChange={(event) => setForm({ ...form, sets: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="exercise-reps">Reps</label>
+                <input
+                  id="exercise-reps"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={form.reps}
+                  onChange={(event) => setForm({ ...form, reps: event.target.value })}
+                  required
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         <button type="submit">+ Add exercise</button>
       </form>
