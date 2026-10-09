@@ -135,7 +135,7 @@ Karl Shane Y. Bernarte. CS-403, 6APSI.
 
 ![Built with AI assistance](https://img.shields.io/badge/built%20with-AI%20assistance-0b5fff)
 
-Built with heavy assistance from Claude (Anthropic) across both the frontend and backend. See [AI-USAGE.md](AI-USAGE.md) for the full account of what was AI-written, what I changed, and where it got things wrong.
+Built with AI assistance, including Claude (Anthropic) and GitHub Copilot. See [AI-USAGE.md](AI-USAGE.md) for the account of how AI was used, what it got wrong, and the parts I wrote myself.
 
 ## Licence
 
