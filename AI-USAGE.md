@@ -15,8 +15,8 @@ This is a working draft based on the repository history and the project conversa
 ### 2026-10-01 - Workout plans and exercise browsing
 
 - **Tool:** Claude (Anthropic), as credited in the project README.
-- **What I asked for:** Add named workout plans, a workout browser, and history for recent, strength, and cardio exercises.
-- **What it gave back:** Changes to workout navigation, plan browsing, and exercise selection.
+- **What I asked for:** Create a Gym log workout with Calorie counter for me, with Logging of workout set and an individual call Log exercise for individual exercise instead of creating another workout set. Within those We create a workout set first in the Log workout then after creating we are able to put exercise in with reps and set and weight on how heavy the workout is. Apply that to Log exercise too.
+- **What it gave back:** Calorie Counter in the middle and a button for Log Workout and Log exercise, although it was buggy and incomplete but it has session logs where it shows where the logged workout is in the very bottom of the logged workout. At this time it wasn't saving properly every refresh and every input you do wouldn't save as a local database or local save.
 - **What I kept, what I changed, and why:** I kept the plan and browsing features, then continued testing the exercise logging flow and requested fixes when the behavior did not match what I expected.
 - **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/9a398d7
 
@@ -63,43 +63,42 @@ This is a working draft based on the repository history and the project conversa
 
 ## 2. Where the AI got it wrong
 
-### Case 1 - The exercise-catalog change was overcomplicated
+### Case 1 - Startup Demo app with occuring bugs and wrong understanding of AI
 
-- **What it gave me:** An early attempt at adding activities introduced extra catalog structure and changes beyond the direct catalog edit I requested.
-- **What was wrong with it:** It expanded the scope and made a simple exercise-list change harder to review. I wanted the exercises as ordinary entries directly in `metTable.js`.
-- **What I did instead:** I clarified the scope and kept the catalog entries in the existing file.
-- **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/726a599
+- **What it gave me:** It gave me a design that is very inconsistent and the design of the buttons got squished when i ask to make a button that would appealing to look at, but it gave me a run down button that is 2x2 size of Log Workout and Log Exercise. And the Log Workout and Log Exercise doesn't exactly work the way i intend it to be, it wouldn't save the changes i made or the workout sets i made. Rather every restart of the app would just go back straight to the hardcoded design.
+- **What was wrong with it:** The App is stuck to the hard coded design and wouldn't be able to save the workout sets i've created and the Weights and Reps/Set doesn't calculate properly it will be stuck at 0 instead of calculating its calorie burn along the its met from the metTable.js. Another was the buttons for the Log Workout and Exercise are squished and was frustrating to fix.
+- **What I did instead:** I clarified the design i got from the Figma to be exact of the design and copy the style I wouldn't stray away from its design as I was already fond of it. Kept prompting and prompting to fix it until it got it.
+- **Commit:** https://github.com/Karl-Bernarte/Hercurles/actions/runs/36318043351
 
-### Case 2 - The generated exercise names were too repetitive
+### Case 2 - Workout Session duplicating and Weights on workout plans
 
-- **What it gave me:** Some exercise suggestions used technique/grip/tempo variants and labels such as “chest focus.”
-- **What was wrong with it:** These were not the straightforward exercise names I wanted and they made the picker unnecessarily long.
-- **What I did instead:** I asked for the variants to be removed, the categories grouped cleanly, and more genuine chest movements mixed with other strength exercises.
-- **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/726a599
+- **What it gave me:** It gave me a code that was somehow duplicating the workout and everytime I press my workout and just press back it would Log instantly without asking me to. As well the weights on workout plans doesn't calculate again properly as the AI accidentally removed the calculation for the weights.
+- **What was wrong with it:** The Workout session is getting duplicated everytime you press it or press it on the Log Workout and press back, it would log immediately when you haven't pressed Log as complete. Another was it removed the calculation of the weights on each workout so the calorie burn wasn't working and doesn't calculate it on the Total Calorie burn and calorie left.
+- **What I did instead:** I asked for it to fix the Workout session when you press the Workout session list it wouldn't mark it as log as complete or when you just press back on it that it wouldn't complete it as well. As well to fix the calculation of the weights from the list so it would calculate for the total calorie burn and total calorie left.
+- **Commit:** https://github.com/Karl-Bernarte/Hercurles/actions/runs/37070843632
 
-### Case 3 - The Render diagnosis did not fix the live endpoint
+### Case 3 - The Adding of Exercises hallucination with adding a lot of changes 
 
-- **What it gave me:** The AI suggested deployment configuration and health-route troubleshooting changes.
-- **What was wrong with it:** Despite those changes, the deployed health endpoint still did not respond. The suggested diagnosis was not enough to explain or resolve what was happening on Render.
-- **What I did instead:** I checked the logs and URL myself, reported that the endpoint was still unavailable, and switched to local testing rather than claiming the deployment was fixed.
-- **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/cc1839b
-- **Related commit:** https://github.com/Karl-Bernarte/Hercurles/commit/91df3c0
+- **What it gave me:** The AI gave me a lot of files that wasn't required for the website and creating a new file for the metTable where it would add more exercise onto the new file instead of adding them all in the metTable.js. The file was already laid out, but still bother to create a new file and add the new exercises from there and wasn't even consistent with the metTable.js, it also made some changes i don't even know what the AI changes made.
+- **What was wrong with it:** The prompt i gave was add more 200 exercise for Strength and 20% to cardio, but instead it create a new file instead of going inside metTable and just follow that flow for the exercises. Another thing is creating a lot of changes when it wasn't even needed from the other files when i only ask to add more exercises.
+- **What I did instead:** What i did after since the AI exercises it made from the new file didn't have a consistent list like on the metTable.js. I ask it to follow that with its name, category, and its met after that i just pasted it in the metTable.js and just re-organized it into Strength and Cardio so it would look more cleaner.
+- **Commit:** https://github.com/Karl-Bernarte/Hercurles/actions/runs/37948308776
 
 ## 3. Who wrote what
 
-> **Complete this section yourself before submitting.** Do not claim AI-generated code as your own. The badge requires at least 20% of the Node/Express/PostgreSQL app to be code you personally wrote and can explain. Pick specific server-side code you actually wrote, estimate the portion honestly, and explain it in your own words. If you cannot identify that much code yet, write and commit more server-side code yourself before submitting.
+> **Complete this section yourself before submitting.** I wrote the Food Tab and use what already laid out from the foundation of Workout Tab, took some of its idea and code, but adjust it so it would work for Food Tab as well took an inspiration from MyFitnessPal design. I went with MyFitnessPal idea as I was already used to it, implemented it and work with it and ask for AI to fix the code and if the code that he is providing for the fix on the error I would ask for it to make a copy and paste of my entire code so every indent and every error is already fixed. I also asked what can i add more for Food Tab so I wouldn't left anything important and how I would start  it. The Custom button was later add on as i don't know how to do it so i had AI to do it for Food and Exercise too since I don't have links to other workout and food datasets so i just made them to add a custom of their own food or exercise
 
 ### Written by me
 
-- **My GitHub handle:** `[fill in]`
-- **File(s) and functions I personally wrote:** `[fill in exact server-side file paths/functions]`
-- **Commit(s):** `[link to the commit(s) that contain your own code]`
-- **Approximate share of the Node/Express/PostgreSQL app:** `[estimate honestly; explain how you estimated it]`
-- **What my code does and why I built it this way (in my own words):** `[write your explanation]`
+- **My GitHub handle:** `Food Tab and FoodsView, Added atleast 56 exercise for metTable.js for Strength and Cardio. `
+- **File(s) and functions I personally wrote:** `I did the Food tab, since the design and the structure was already laid out from the exercise i took some of the code and made some changes on it to fit the food tab. Although i had to ask help for copilot when things go wrong or how to fix it. Another thing i ask the copilot what i can do to add more and how i can fix it. It was tedious and tiring since i have to keep looking from code to code how the workout tab was creating, but other than that after laying out what i can do after all of that i had copilot help me after although i didn't do the custom add button that was added later on since i didn't know how i would design or do it. I asked help from copilot how i could make a branch first before doing my own coding just to be sure if something broke.Luckily it seem nothing broke and help how to push it on the main after since it was a struggle trying to get it out from branch to main.`
+- **Commit(s):** `https://github.com/Karl-Bernarte/Hercurles/tree/feature/local-food-logging`
+- **Approximate share of the Node/Express/PostgreSQL app:** `5% I used the code from the hauntsighting repo that we used on the modules. I did that first before starting my app but gave up half way as it was tiring my brain our figuring out how to make it work without asking AI for help.`
+- **What my code does and why I built it this way (in my own words):** `I only used the layed out foundation of the workout tab although added some of my style to it so it would be differentiate a bit. Even differentiating it a bit i just ask what i could add more from the AI so i can do my thing first before the Ai does. After racking my brains out what causes the error i just copy and paste the whole code so nothing breaks, when i mean copy pasting the entire code is I already did the code i just make the Ai copy my whole code and fix the part with the problem only so when i paste it, Theres no more bugs and the indents of the code is corrected.`
 
 ### The AI-written part I understand best
 
-- **File:** `server/validation.js`
-- **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/1a97100
-- **What it does:** The validation functions check incoming request data before it is used by the API. They reject unexpected fields and invalid values, and return normalized values for valid requests.
-- **Why we kept it:** It provides a clear boundary between untrusted request data and the route/repository code. **Rewrite this explanation in your own words and be ready to explain one validation function.**
+- **Files:** `client/src/App.jsx` and `client/src/styles.css`
+- **Commit:** https://github.com/Karl-Bernarte/Hercurles/commit/13c6980
+- **What it does:** This was the first major step in turning the starter project into Hercurles. It replaced the starter screen with the workout app's main structure and established the early visual styling for logging sessions and sets and viewing workout information. Due to the colors and visual, i was quite fond of the design of it being neon as it was once my favorite color of my jacket with Black and Neon green. So that made me stuck with its design given by the wireframe from the AI of Figma.
+- **Why we kept it:** It gave the project its initial website layout and styling to build on. As the project grew, I asked for changes to the workout, food, and weight areas, so the design evolved from that starting point. I understand this part as the foundation of the website. I stuck with the design given from Figma as it looks clean and only has the necessary things I would need for my gym session and not bloat it with premium stuffs that i wouldn't even consider using from those apps that makes you pay for things that should be free from their simple functions.
